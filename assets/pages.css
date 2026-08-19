@@ -2309,7 +2309,10 @@ html.is-locked .site-header {
 .progress__count { font-variant-numeric: tabular-nums; color: var(--c-ink); font-weight: var(--fw-medium); white-space: nowrap; }
 @media (max-width: 767.98px) { .progress__count { display: none; } }
 
-.layout { display: grid; gap: var(--s-6); align-items: start; }
+/* minmax(0, 1fr), а не просто одна колонка: без нижней границы 0 колонка грид-сетки
+   растягивается до min-content самого широкого потомка. На узком экране это
+   разъезжало всю страницу вправо — карточки и сортировка вылезали за экран. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); align-items: start; }
 @media (min-width: 1024px) {
   .layout { grid-template-columns: var(--filters-w) minmax(0, 1fr); gap: var(--s-8); }
 }
