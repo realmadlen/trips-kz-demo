@@ -2275,6 +2275,19 @@ html.is-locked .site-header {
   font-weight: var(--fw-medium);
   font-variant-numeric: tabular-nums;
 }
+/* Пара «разделитель + значение» — одна ячейка строки: тот же зазор, что и
+   между ячейками, но разорвать её переносом нельзя. */
+.searchbar__summary > span { display: inline-flex; align-items: center; gap: var(--s-2); }
+.searchbar__summary i { font-style: normal; }
+.searchbar__summary .summary-br { display: none; }
+@media (max-width: 767.98px) {
+  /* На телефоне условия поиска не влезают в строку. Раньше лишнее просто
+     обрезалось — теперь маршрут идёт первой строкой, срок и туристы второй. */
+  .searchbar__summary { flex-wrap: wrap; overflow: visible; row-gap: 2px; }
+  .searchbar__summary .summary-br { display: block; flex: 0 0 100%; height: 0; margin: 0; }
+  /* Точка перед датами открывала бы вторую строку — там ей нечего разделять. */
+  .searchbar__summary .summary-br + span i { display: none; }
+}
 .searchbar__full { display: none; padding-bottom: var(--s-4); }
 .searchbar[data-expanded="true"] .searchbar__full { display: block; }
 
@@ -2331,6 +2344,56 @@ html.is-locked .site-header {
   font-weight: var(--fw-medium);
   color: var(--c-ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* Кнопка «Фильтры» нужна только там, где боковой колонки фильтров нет: ниже
+   1024 она скрыта, и шторку больше нечем открыть — нижнюю плашку «Фильтры /
+   Сортировка / На карте» мы убрали, она дублировала сквозную панель сайта и
+   стояла у неё на голове. */
+.sortbar__filters { display: none; }
+.sortbar__view { margin-left: auto; }
+.sortbar__view svg { display: none; }
+
+/* Ниже 1024 боковой колонки нет — кнопка нужна на планшете и на телефоне. */
+@media (max-width: 1023px) {
+  .sortbar__filters { display: inline-flex; }
+}
+
+@media (max-width: 767.98px) {
+  /* Две ровные строки вместо переноса «как встанет»: сверху счёт и фильтры,
+     снизу сортировка и вид. Правая колонка по содержимому, левая забирает
+     остаток — поэтому кнопки в обеих строках стоят по одной линии справа.
+     На планшете всё это спокойно живёт одной строкой, там сетка не нужна. */
+  .sortbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  /* Одна высота на все три органа управления: поле сортировки задаёт 40,
+     кнопка и переключатель подстраиваются под него. */
+  .sortbar__filters { --btn-h: 40px; }
+  .sortbar .select { min-width: 0; }
+  .sortbar__view { margin-left: 0; }
+  .sortbar__view button { min-height: 32px; }
+  /* Подписи видов уступают место иконкам: втроём словами они не встают в одну
+     строку с сортировкой ни на одной ширине телефона. Текст остаётся в
+     разметке — его читает скринридер. */
+  .sortbar__view svg { display: block; }
+  .sortbar__view button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sortbar__view button span {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
 }
 /* Своя стрелка вместо системной. Системная рисуется вплотную к правому краю
    поля и не подчиняется padding: между знаком и рамкой оставалось 3–4px,

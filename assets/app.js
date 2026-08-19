@@ -539,8 +539,18 @@ window.App = (function () {
     var city = nm(Data.city(prm.from).name);
     var dest = destLabel(prm.to) || t('f.toPlaceholder');
     var dates = Fmt.range(prm.date, prm.nightsMin);
-    return '<b>' + esc(city) + '</b> → <b>' + esc(dest) + '</b> · <b>' + dates + '</b> · <b>' +
-      Fmt.nights(prm.nightsMin) + '</b> · <b>' + esc(guestsLabel(prm)) + '</b>';
+    /* Каждый разделитель склеен со своим значением в одну ячейку. Голым текстом
+       между <b> он становился отдельным элементом флекса и при переносе строки
+       на телефоне оставался висеть в конце — «…отель ·» и пустота. */
+    var part = function (sep, val) { return '<span><i>' + sep + '</i><b>' + val + '</b></span>'; };
+    /* Пустой элемент — управляемое место переноса: на телефоне строка рвётся
+       именно здесь, маршрут отдельно, срок и туристы отдельно. */
+    return '<b>' + esc(city) + '</b>' +
+      part('→', esc(dest)) +
+      '<i class="summary-br" aria-hidden="true"></i>' +
+      part('·', dates) +
+      part('·', Fmt.nights(prm.nightsMin)) +
+      part('·', esc(guestsLabel(prm)));
   }
 
   /* ==========================================================================
