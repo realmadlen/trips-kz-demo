@@ -1126,7 +1126,18 @@
   gap: var(--s-1);
   padding: var(--s-3) var(--s-4);
 }
-.tour-row__price .btn { --btn-h: 40px; margin-top: var(--s-1); }
+/* Купить и Подробнее — в один ряд, как в компактной карточке на главной.
+   Базис 100 и узкие поля выбраны по самой длинной подписи: так пара встаёт
+   рядом и на телефоне, и в правой колонке десктопа шириной 220. Перенос
+   оставлен на случай длинного перевода — тогда кнопки станут друг под другом,
+   а не порвут надписи пополам. */
+.tour-row__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.tour-row__cta .btn { --btn-h: 40px; flex: 1 1 100px; padding-inline: var(--s-2); }
 /* В узкой колонке цена занимала три строки: перенос по flex ставил сумму,
    старую цену, процент и «за двоих» друг под друга как придётся. Здесь это
    фиксированная сетка 2×2 — сумма и «за двоих» сверху, старая цена и процент
@@ -1147,18 +1158,15 @@
    полноразмерная плашка рядом со строчкой в 20 px читалась как отдельный
    элемент, хотя это подпись к той же старой цене. */
 .tour-row__price .price-line .tag { grid-area: 2 / 2; padding: 1px var(--s-2); font-size: var(--t-nano); }
-/* Второстепенные действия в одну строку под кнопкой покупки. Обе подписи —
-   в одну строчку каждая: перенос «Ещё варианты дат и питания» пополам делал
-   из двух ссылок визуальный абзац. */
+/* Осталось одно второстепенное действие — раскрыть соседние даты. Строкой,
+   а не кнопкой: оно ничего не покупает и не уводит со страницы. */
 .tour-row__links {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--s-2);
   font-size: var(--t-meta);
   white-space: nowrap;
 }
-.tour-row__links .link-btn,
 .tour-row__links .disclose { font-size: inherit; min-height: 28px; }
 .link-btn {
   min-height: 32px;
@@ -1171,13 +1179,6 @@
   cursor: pointer;
 }
 .link-btn:hover { text-decoration: underline; }
-.tour-row__op {
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  font-size: var(--t-meta);
-  color: var(--c-ink-3);
-}
 .installment {
   font-size: var(--t-meta);
   color: var(--c-ink-2);

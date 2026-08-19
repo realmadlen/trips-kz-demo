@@ -1118,7 +1118,6 @@ window.App = (function () {
     opts = opts || {};
     var h = Data.hotel(tour.hotelId);
     var c = Data.country(tour.countryId), r = Data.resort(tour.countryId, tour.resortId);
-    var op = Data.operator(tour.operatorId);
     var perMonth = Math.round(tour.price / 12 / 1000) * 1000;
     var dots = '';
     for (var i = 0; i < 5; i++) dots += '<span' + (i === 0 ? ' data-on="true"' : '') + '></span>';
@@ -1169,14 +1168,19 @@ window.App = (function () {
           /* Короткая пометка: полный состав пакета всё равно идёт строкой ниже,
              и «перелёт включён» дважды подряд — это не забота, а шум. */
           '<span class="price-note">' + esc(t('card.perTwoShort')) + '</span></div>' +
-        '<p class="t-meta">' + esc(t('card.includes')) + '</p>' +
+        /* Состав пакета и оператор ушли со всех двадцати карточек выдачи: это
+           одинаковый на всю страницу текст, который читают один раз и уже на
+           странице тура — там есть и раздел «Что входит в цену», и строка
+           оператора. Рассрочка осталась и встала вплотную к цене: она про
+           деньги, а не про условия. */
         '<p class="installment">' + t('card.installment', { sum: Fmt.money(perMonth) }) + '</p>' +
-        '<div class="tour-row__op">' + esc(t('card.operator')) + ': ' + esc(op.name) + '</div>' +
-        '<button class="btn btn--blue btn--block" type="button" data-buy>' + esc(t('card.buy')) + '</button>' +
-        /* «Подробнее» и «Ещё даты» — второстепенные действия, им хватает
-           строки ссылок: две кнопки во всю ширину стоили карточке 90 px. */
+        /* Два действия в ряд — тот же приём, что в компактной карточке на
+           главной. Ссылкой «Подробнее» выглядела слабее, чем весит. */
+        '<div class="tour-row__cta">' +
+          '<button class="btn btn--blue" type="button" data-buy>' + esc(t('card.buy')) + '</button>' +
+          '<button class="btn btn--ghost" type="button" data-more>' + esc(t('card.more')) + '</button>' +
+        '</div>' +
         '<div class="tour-row__links">' +
-          '<button class="link-btn" type="button" data-more>' + esc(t('card.more')) + '</button>' +
           '<button class="disclose" type="button" data-alt aria-expanded="false">' +
             esc(t('card.altDates')) + icon('chev-d') + '</button>' +
         '</div>' +
