@@ -1072,7 +1072,7 @@ window.App = (function () {
            добавлял карточке высоту, а сказать должен ровно то же, что скидка
            в противоположном углу, — «решай быстрее». */
         (tour.seats ? '<div class="tour-card__bottom"><span class="tag tag--onphoto">' +
-          (tour.seats === 1 ? t('card.seats1') : t('card.seats', { n: tour.seats })) +
+          seatsLabel(tour.seats) +
           '</span></div>' : '') +
       '</div>' +
       '<div class="tour-card__body">' +
@@ -1092,6 +1092,20 @@ window.App = (function () {
         '</div>' +
       '</div>' +
     '</article>';
+  }
+
+  /* «Осталось 3 мест» — так по-русски не говорят. Форма зависит от числа:
+     1 место, 2–4 места, 5 и дальше мест; 11–14 всегда «мест». */
+  function seatsLabel(n) {
+    var d = n % 10, h = n % 100;
+    if (d === 1 && h !== 11) return t('card.seats1', { n: n });
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return t('card.seats2', { n: n });
+    return t('card.seats', { n: n });
+  }
+
+  /* Строка факта: подпись и значение — две ячейки одной сетки. */
+  function fact(label, value) {
+    return '<dt>' + esc(label) + '</dt><dd>' + value + '</dd>';
   }
 
   function favBtn(tour) {
@@ -1125,21 +1139,22 @@ window.App = (function () {
         '<div class="tour-row__place">' + esc(nm(r.name)) + ', ' + esc(nm(c.name)) + ' · ' +
           t('card.toBeach', { n: h.dist }) + ' · ' + t('card.toAirport', { n: h.air }) + '</div>' +
         '<div class="tour-row__rate">' + ratingHTML(h) + '</div>' +
-        /* Факты в две колонки, а не строкой с переносами: тот же состав
-           занимает три ряда вместо пяти, и глаз ищет значение по столбцу. */
-        '<div class="tour-row__facts">' +
-          '<span><b>' + Fmt.range(tour.date, tour.nights) + '</b></span>' +
-          '<span>' + Fmt.nights(tour.nights) + '</span>' +
-          '<span>' + esc(nm(Data.city(tour.cityId).name)) + '</span>' +
-          '<span>' + esc(nm(Data.room(tour.room).name)) + '</span>' +
-          '<span><b>' + esc(nm(Data.meal(tour.meal).name)) + '</b></span>' +
-          '<span>' + esc(nm(Data.beachType(h.beach).name)) + ', ' +
-            esc(nm(Data.byId(Data.BEACH_LINES, String(h.line)).name).replace(/:.*$/, '')).toLowerCase() + '</span>' +
-        '</div>' +
+        /* Раньше это были шесть значений без подписей, разложенных в две
+           колонки: по строке рядом оказывались вылет и тип номера, питание и
+           пляж — вещи из разных миров. Читать такое можно только догадками.
+           Теперь у каждого факта есть имя, а значения выстроены в столбец. */
+        '<dl class="tour-row__facts">' +
+          fact(t('card.lblDates'), Fmt.range(tour.date, tour.nights) + ' · ' + Fmt.nights(tour.nights)) +
+          fact(t('card.lblFlight'), esc(nm(Data.city(tour.cityId).name))) +
+          fact(t('f.room'), esc(nm(Data.room(tour.room).name))) +
+          fact(t('flt.meal'), esc(nm(Data.meal(tour.meal).name))) +
+          fact(t('flt.beach'), esc(nm(Data.beachType(h.beach).name)) + ', ' +
+            esc(nm(Data.byId(Data.BEACH_LINES, String(h.line)).name).replace(/:.*$/, '')).toLowerCase()) +
+        '</dl>' +
         /* Метки и значки услуг — в один ряд: раньше это были две отдельные
            строки, хотя обе отвечают на один вопрос «что ещё есть». */
         '<div class="tour-row__marks">' +
-          (tour.seats ? '<span class="tag">' + (tour.seats === 1 ? t('card.seats1') : t('card.seats', { n: tour.seats })) + '</span>' : '') +
+          (tour.seats ? '<span class="tag">' + seatsLabel(tour.seats) + '</span>' : '') +
           (tour.top ? '<span class="tag tag--warm">' + t('card.top') + '</span>' : '') +
           (tour.direct ? '<span class="tag tag--outline">' + icon('plane') + t('card.direct') + '</span>' : '') +
           '<span class="tour-row__svc">' + h.svc.map(function (s) {

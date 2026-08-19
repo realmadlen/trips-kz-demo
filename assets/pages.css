@@ -1084,17 +1084,26 @@
   color: var(--c-ink);
 }
 .tour-row__place { font-size: var(--t-body-s); color: var(--c-ink-2); }
-/* Две колонки: даты/ночи, вылет/номер, питание/пляж — пары, а не поток */
+/* Подпись и значение: узкая колонка имён слева, значения выстроены по одной
+   левой границе. Имена приглушены — их читают один раз, дальше глаз идёт
+   по значениям. */
 .tour-row__facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 2px var(--s-3);
+  margin: 0;
   font-size: var(--t-body-s);
   color: var(--c-ink-body);
   font-variant-numeric: tabular-nums;
 }
-.tour-row__facts b { font-weight: var(--fw-medium); }
+.tour-row__facts dt { color: var(--c-ink-3); }
+.tour-row__facts dd { margin: 0; }
 .tour-row__svc { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); color: var(--c-ink-3); }
+/* Значки услуг без подписей — ряд серых закорючек: на широкой карточке
+   они хотя бы стоят в конце строки с метками, а на телефоне переносятся
+   отдельной строкой и читаются как сор. Состав услуг есть на странице
+   отеля, здесь он ничего не решает. */
+@media (max-width: 899.98px) { .tour-row__svc { display: none; } }
 .tour-row__svc svg { width: 17px; height: 17px; }
 .tour-row__marks {
   display: flex;
@@ -1102,6 +1111,13 @@
   align-items: center;
   gap: var(--s-1) var(--s-2);
   margin-top: auto;
+}
+/* Ряд меток без единой метки — пустая строка, которая всё равно забирает
+   зазор карточки. Правило только для телефона: там значки услуг скрыты, и у
+   части туров в этом ряду не остаётся ничего. На широком экране значки на
+   месте, и прятать ряд нельзя. */
+@media (max-width: 899.98px) {
+  .tour-row__marks:not(:has(.tag)) { display: none; }
 }
 
 .tour-row__price {
