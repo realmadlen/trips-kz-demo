@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trips.kz — пакетные туры за рубеж из городов Казахстана</title>
+<meta name="description" content="Поиск пакетных туров из Алматы, Астаны, Шымкента и других городов Казахстана: цена за двоих в тенге, даты, отель, питание.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&family=Unbounded:wght@700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/pages.css">
+</head>
+<body class="has-tabbar">
+<script src="assets/sprite.js"></script>
+
+<!--
+THESIS: Главная турагентства, где спокойная премиальная поверхность несёт плотную торговую
+машинерию поиска: воздух принадлежит странице, плотность — товару.
+OWN-WORLD: Тёплый off-white #FCFDFB, Onest 300 на крупном кегле, ритм 5px внутри карточек и
+120px между секциями; лайм #DCFF00 значит выгоду, синий #1F5CFF — действие, остальное нейтрально.
+STORY: Человек из Казахстана вечером сравнивает три вкладки; здесь он за один экран задаёт
+город вылета, направление и даты и уходит в выдачу с понятной ценой в тенге.
+FIRST VIEWPORT: Фотография во всю ширину с радиусом 30, заголовок в две строки светлым
+начертанием, поисковая панель, лежащая на фотографии, и лаймовая кнопка «Найти туры».
+Панель обязана уместиться на первом экране целиком на любой высоте окна: высоту задаёт
+не фотография, а остаток от --hero-reserve (pages.css, §3).
+FORM: пять полей в строку на 1120+, две колонки на планшете и на телефоне; на телефоне
+полный состав с вкладками открывается кнопкой «Поиск» нижней панели.
+CHROME: шапка — одна строка (логотип, город, разделы, связь, язык·валюта, вход);
+на телефоне избранное и профиль живут в нижней панели, а не в шапке.
+FINISH: содержимое — демонстрационный набор (см. docs/plan-glavnaya-i-vydacha.md); в вёрстке
+пометок об этом нет намеренно — макет показывают как итоговый дизайн.
+-->
+
+
+<!-- Шапка в одну строку. Служебная полоса над ней убрана: город, связь,
+     язык с валютой и вход встали в тот же ряд, что логотип и меню, поэтому
+     первый экран начинается на 44px выше. График работы ушёл в меню и подвал —
+     он нужен раз за визит и не стоит строки в шапке. -->
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="index.html">
+      <svg aria-hidden="true"><use href="#i-mark"></use></svg>
+      trips.kz
+    </a>
+
+    <div class="field site-header__city" data-city-picker>
+      <button class="city-pick" type="button" aria-haspopup="listbox" aria-expanded="false"
+              data-i18n-attr="aria-label:top.cityChange" aria-label="Сменить город вылета">
+        <svg class="city-pick__plane" aria-hidden="true"><use href="#i-plane-up"></use></svg>
+        <span data-city-label>Алматы</span>
+        <svg aria-hidden="true"><use href="#i-chev-d"></use></svg>
+      </button>
+      <div class="pop" role="listbox" aria-label="Город вылета" data-city-list></div>
+    </div>
+
+    <!-- Язык и валюта стоят рядом с городом: это три настройки одного рода —
+         «откуда я и на каком языке смотрю», и держать их в разных концах
+         строки незачем. -->
+    <div class="field prefs site-header__wide" data-prefs>
+      <button class="city-pick" type="button" aria-haspopup="true" aria-expanded="false"
+              data-i18n-attr="aria-label:top.prefs" aria-label="Язык и валюта">
+        <svg aria-hidden="true"><use href="#i-globe"></use></svg>
+        <span data-prefs-label>Рус · KZT</span>
+        <svg aria-hidden="true"><use href="#i-chev-d"></use></svg>
+      </button>
+      <div class="pop prefs__pop">
+        <div class="pop__group">
+          <div class="pop__title" data-i18n="top.language">Язык</div>
+          <span class="lang lang--block" role="group" aria-label="Язык">
+            <button type="button" data-lang="ru" aria-pressed="true">Рус</button>
+            <button type="button" data-lang="kk" aria-pressed="false">Қаз</button>
+            <button type="button" data-lang="en" aria-pressed="false">Eng</button>
+          </span>
+        </div>
+        <div class="pop__group">
+          <div class="pop__title" data-i18n="top.currency">Валюта</div>
+          <span class="seg seg--block" role="group" aria-label="Валюта">
+            <button type="button" data-cur="KZT" aria-pressed="true">KZT</button>
+            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Основное меню">
+      <div class="nav__item">
+        <button class="nav__link" type="button">
+          <span data-i18n="nav.tours">Туры</span>
+          <svg aria-hidden="true"><use href="#i-chev-d"></use></svg>
+        </button>
+        <div class="nav__panel">
+          <div class="nav__col"><h3 data-i18n="nav.fromCity">По городу вылета</h3><div data-nav-cities></div></div>
+          <div class="nav__col"><h3 data-i18n="nav.byCountry">По странам</h3><div data-nav-countries></div></div>
+        </div>
+      </div>
+      <div class="nav__item">
+        <button class="nav__link" type="button">
+          <span data-i18n="nav.hot">Горящие туры</span>
+          <svg aria-hidden="true"><use href="#i-chev-d"></use></svg>
+        </button>
+        <div class="nav__panel">
+          <div class="nav__col"><h3 data-i18n="nav.fromCity">По городу вылета</h3><div data-nav-cities></div></div>
+          <div class="nav__col"><h3 data-i18n="nav.byCountry">По странам</h3><div data-nav-countries></div></div>
+        </div>
+      </div>
+      <div class="nav__item"><a class="nav__link" href="search.html" data-i18n="nav.countries">Страны</a></div>
+      <div class="nav__item"><a class="nav__link" href="search.html?view=grid" data-i18n="nav.hotels">Отели</a></div>
+      <!-- Разделы ниже уступают место, когда строка перестаёт вмещать всё:
+           полный состав сайта всегда открыт бургером. Экскурсий в строке нет:
+           отдельного раздела под них пока не существует, и в шапке пункт вёл
+           на заглушку — в меню он остался вместе с остальной картой сайта. -->
+      <div class="nav__item nav__item--wide"><a class="nav__link" href="#pay" data-i18n="nav.payment">Оплата</a></div>
+      <div class="nav__item nav__item--xwide"><a class="nav__link" href="#" data-demo data-i18n="nav.about">О компании</a></div>
+      <div class="nav__item nav__item--xwide"><a class="nav__link" href="#blog" data-i18n="nav.blog">Блог</a></div>
+      <div class="nav__item nav__item--xwide"><a class="nav__link" href="#contacts" data-i18n="nav.contacts">Контакты</a></div>
+    </nav>
+
+    <div class="site-header__side">
+      <a class="topbar__link topbar__phone site-header__phone" href="tel:+77270000000">+7 (727) 000-00-00</a>
+      <!-- На телефоне номер сжат до трубки: строкой он не оставлял места городу -->
+      <a class="btn-icon site-header__call" href="tel:+77270000000"
+         data-i18n-attr="aria-label:top.call;title:top.call" aria-label="Позвонить" title="Позвонить">
+        <svg aria-hidden="true"><use href="#i-phone"></use></svg>
+      </a>
+      <!-- WhatsApp — знаком, а не словом: зелёный кружок читается быстрее строки.
+           Стоит на всех ширинах: на телефоне это второй способ связи рядом
+           с трубкой, и именно им пишут вечером, когда офис закрыт. -->
+      <a class="topbar__wa" href="#" data-demo aria-label="WhatsApp" title="WhatsApp"
+         data-i18n-attr="aria-label:top.whatsapp;title:top.whatsapp">
+        <svg aria-hidden="true"><use href="#i-whatsapp"></use></svg>
+      </a>
+      <button class="topbar__icon site-header__wide" type="button" data-favorites-open
+              data-i18n-attr="aria-label:top.favorites;title:top.favorites"
+              aria-label="Избранное" title="Избранное">
+        <svg aria-hidden="true"><use href="#i-heart"></use></svg>
+        <span class="topbar__count" data-fav-count></span>
+      </button>
+      <!-- Лупы в шапке нет: форма поиска стоит первым экраном, а на
+           прокрученной странице к ней возвращает «Поиск» нижней панели.
+           «Войти» — контурная, а не чёрная: единственная сплошная кнопка
+           страницы должна оставаться лаймовой «Найти туры». -->
+      <button class="btn btn--ghost site-header__login" type="button" data-profile-open>
+        <svg aria-hidden="true"><use href="#i-user"></use></svg>
+        <span data-i18n="top.login">Войти</span>
+      </button>
+      <button class="btn-icon burger" type="button" data-burger aria-label="Меню">
+        <svg aria-hidden="true"><use href="#i-list"></use></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Меню открывается под шапкой, а не поверх неё: логотип, город, связь и сам
+     бургер (он становится крестиком) остаются на месте, поэтому своей строки
+     с логотипом и закрытием у меню больше нет. -->
+<div class="menu-sheet" data-open="false">
+  <!-- Кнопок «Найти туры», «Войти» и «Избранное» наверху меню больше нет:
+       все три стоят в нижней панели, откуда до них достаёт большой палец,
+       и в меню они только оттягивали первый экран списка вниз. Меню теперь
+       открывается тем, ради чего его и открывают, — картой сайта. -->
+  <div class="container menu-sheet__list">
+    <div class="menu-sheet__grid">
+      <div class="menu-sheet__col">
+        <h3 data-i18n="menu.search">Поиск туров</h3>
+        <a href="search.html" data-i18n="menu.allTours">Все туры</a>
+        <a href="search.html?hot=1" data-i18n="nav.hot">Горящие туры</a>
+        <a href="search.html?view=grid" data-i18n="nav.hotels">Отели</a>
+        <a href="#" data-demo data-i18n="nav.excursions">Экскурсии</a>
+        <a href="#collections" data-i18n="menu.collections">Подборки туров</a>
+        <a href="#calendar" data-i18n="menu.calendar">Календарь низких цен</a>
+      </div>
+      <div class="menu-sheet__col">
+        <h3 data-i18n="nav.fromCity">По городу вылета</h3>
+        <div class="menu-sheet__sub" data-nav-cities></div>
+      </div>
+      <div class="menu-sheet__col">
+        <h3 data-i18n="nav.byCountry">По странам</h3>
+        <div class="menu-sheet__sub" data-nav-countries></div>
+      </div>
+      <div class="menu-sheet__col">
+        <h3 data-i18n="foot.tourists">Туристам</h3>
+        <a href="#pay" data-i18n="nav.payment">Оплата</a>
+        <a href="#" data-demo data-i18n="menu.docs">Документы для поездки</a>
+        <a href="#" data-demo data-i18n="menu.visa">Визы и правила въезда</a>
+        <a href="#" data-demo data-i18n="menu.insurance">Страхование</a>
+        <a href="#" data-demo data-i18n="menu.faq">Частые вопросы</a>
+        <a href="#reviews" data-i18n="menu.reviews">Отзывы туристов</a>
+      </div>
+      <div class="menu-sheet__col">
+        <h3 data-i18n="foot.company">Компания</h3>
+        <a href="#" data-demo data-i18n="nav.about">О компании</a>
+        <a href="#operators" data-i18n="menu.operators">Туроператоры</a>
+        <a href="#blog" data-i18n="nav.blog">Блог</a>
+        <a href="#" data-demo data-i18n="menu.jobs">Вакансии</a>
+        <a href="#" data-demo data-i18n="menu.offer">Договор-оферта</a>
+        <a href="#" data-demo data-i18n="menu.privacy">Политика конфиденциальности</a>
+      </div>
+      <div class="menu-sheet__col">
+        <h3 data-i18n="foot.contacts">Контакты</h3>
+        <a href="#contacts" data-i18n="menu.offices">Офисы и контакты</a>
+        <a href="tel:+77270000000">+7 (727) 000-00-00</a>
+        <a href="#" data-demo data-i18n="top.whatsapp">WhatsApp</a>
+        <a href="#" data-demo data-i18n="top.callback">Обратный звонок</a>
+        <a href="#" data-demo data-i18n="top.favorites">Избранное</a>
+        <a href="#" data-demo data-i18n="top.login">Войти</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подвал меню: язык, валюта и связь. Настройки стоят там же, где они
+       стоят в подвале сайта, — под содержимым, а не перед ним: их меняют
+       один раз за визит, а разделы открывают каждый раз. Язык и валюта —
+       два одинаковых переключателя без подписей: «Рус Қаз Eng» и «KZT USD
+       EUR» называют себя сами, а один компонент на оба держит равную высоту. -->
+  <div class="container menu-sheet__foot">
+    <div class="menu-sheet__switches">
+      <span class="seg seg--tap seg--block" role="group"
+            data-i18n-attr="aria-label:top.language" aria-label="Язык">
+        <button type="button" data-lang="ru" aria-pressed="true">Рус</button>
+        <button type="button" data-lang="kk" aria-pressed="false">Қаз</button>
+        <button type="button" data-lang="en" aria-pressed="false">Eng</button>
+      </span>
+      <span class="seg seg--tap seg--block" role="group"
+            data-i18n-attr="aria-label:top.currency" aria-label="Валюта">
+        <button type="button" data-cur="KZT" aria-pressed="true">KZT</button>
+        <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+        <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+      </span>
+    </div>
+    <div class="menu-sheet__contact">
+      <a class="menu-sheet__tel" href="tel:+77270000000">
+        <svg aria-hidden="true"><use href="#i-phone"></use></svg>
+        +7 (727) 000-00-00
+      </a>
+      <span class="menu-sheet__hours" data-i18n="top.hours">Пн–Пт 10:00–19:00, Сб 10:00–15:00</span>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- 4.2 Первый экран и поисковая форма -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__media">
+        <!-- Кадр отдаётся тремя размерами: 4K для больших экранов, 2560 для
+             обычных и 1600 для телефона. Один файл на все ширины означал бы
+             либо 600 КБ на мобильном интернете, либо мыло на 27 дюймах. -->
+        <img src="assets/img/hero-blue-2560.webp"
+             srcset="assets/img/hero-blue-1600.webp 1600w,
+                     assets/img/hero-blue-2560.webp 2560w,
+                     assets/img/hero-blue-3840.webp 3840w"
+             sizes="100vw" width="2560" height="1440"
+             alt="Побережье с высоты: густо-синее море с волнами и белой пеной, изумрудное мелководье, белый песок и сосны на склоне"
+             fetchpriority="high" decoding="async">
+        <!-- Затемняющей заливки на кадре больше нет: снимок стоит чистым,
+             как фотография. Белый текст держится на нём за счёт самого кадра —
+             левый нижний угол у него тёмно-синий. -->
+        <!-- Надзаголовка здесь нет намеренно: над h1 он забирал строку первого
+             экрана, а то же самое сказано на плитках направлений ниже. -->
+        <div class="hero__text">
+          <h1 class="t-display" data-i18n="hero.h1">Горящие туры от турфирмы trips.kz</h1>
+          <!-- Подзаголовок написан дважды, а не обрезан многоточием: на 360px
+               длинная формулировка уходит в четыре строки и съедает кадр,
+               а «…» посреди фразы на первом экране читается как недоделка. -->
+          <p class="t-lead hero__lead--full" data-i18n="hero.lead">Поиск по предложениям туроператоров: цена, даты, отель и питание на одном экране.</p>
+          <p class="t-lead hero__lead--short" data-i18n="hero.leadShort">Цена, даты, отель и питание — на одном экране.</p>
+        </div>
+      </div>
+
+      <!-- Форма живёт здесь, а на телефоне переезжает в шторку по кнопке
+           «Поиск» нижней панели и возвращается обратно: узел один, поэтому
+           введённые город, даты и состав не теряются. -->
+      <div class="hero__panel" data-search-host>
+        <form class="search search--over-media" id="search-form" novalidate></form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.3 Горящие туры -->
+  <section class="section" id="hot">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.hot.eyebrow">Цена ниже обычной</div>
+          <h2 class="t-h2" data-i18n="sec.hot.title">Горящие туры</h2>
+          <p class="t-lead" data-i18n="sec.hot.lead">Вылеты в ближайшие недели из выбранного города. Места ограничены.</p>
+        </div>
+      </div>
+      <div class="row row--slider" data-hot-tabs></div>
+      <div class="cards" data-hot-list></div>
+      <!-- «Смотреть все» стоит под витриной, а не над ней: ссылка в шапке
+           предлагала уйти в выдачу раньше, чем человек увидел хоть одну
+           карточку. Приём тот же, что в отзывах ниже. -->
+      <div class="section__more">
+        <a class="btn btn--ghost" href="search.html?hot=1" data-i18n="sec.hot.all">Смотреть все горящие туры</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.4 Популярные направления -->
+  <section class="section">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.dest.eyebrow">Куда летают из Казахстана</div>
+          <h2 class="t-h2" data-i18n="sec.dest.title">Популярные направления</h2>
+          <p class="t-lead" data-i18n="sec.dest.lead">Цена — минимальная за двоих с перелётом из выбранного города.</p>
+        </div>
+        <!-- Ссылки «Все направления» в шапке нет намеренно: тот же переход
+             стоит последней плиткой в сетке — там, где сетка кончается. -->
+      </div>
+      <div class="tiles" data-tiles></div>
+    </div>
+  </section>
+
+  <!-- 4.5 Календарь низких цен -->
+  <section class="section" id="calendar">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.cal.eyebrow">Когда дешевле</div>
+          <h2 class="t-h2" data-i18n="sec.cal.title">Календарь низких цен</h2>
+          <p class="t-lead" data-i18n="sec.cal.lead">Минимальная цена по месяцам. Нажмите на месяц — откроется выдача с этими датами.</p>
+        </div>
+        <div class="section__tools">
+          <label class="t-caps" for="months-country" data-i18n="f.to">Куда</label>
+          <select class="select" id="months-country" data-months-country></select>
+        </div>
+      </div>
+      <div class="months" data-months data-country="tr"></div>
+    </div>
+  </section>
+
+  <!-- 4.6 Подборки туров -->
+  <section class="section" id="collections">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.coll.eyebrow">Готовые сценарии</div>
+          <h2 class="t-h2" data-i18n="sec.coll.title">Подборки туров</h2>
+        </div>
+      </div>
+      <div class="cards" data-collections></div>
+    </div>
+  </section>
+
+  <!-- 4.7 Что вы получаете. Непроверяемые обещания сюда не ставятся: PRODUCT.md -->
+  <section class="section">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.why.eyebrow">Как мы работаем</div>
+          <h2 class="t-h2" data-i18n="sec.why.title">Что вы получаете</h2>
+        </div>
+      </div>
+      <div class="why">
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-percent"></use></svg></span>
+          <h3 class="t-h5">Цена, которую видно целиком</h3>
+          <p class="t-body-s">Сумма за двоих с перелётом, питанием и трансфером — без пересчёта на последнем шаге.</p>
+        </div>
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-search"></use></svg></span>
+          <h3 class="t-h5">Сравнение операторов в одном списке</h3>
+          <p class="t-body-s">Один поиск вместо трёх вкладок: даты, отель и питание стоят рядом и сопоставимы.</p>
+        </div>
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-card"></use></svg></span>
+          <h3 class="t-h5">Оплата картой, в рассрочку или по счёту</h3>
+          <p class="t-body-s">Kaspi, Halyk, Freedom, рассрочка 0-0-12, перевод по счёту и наличные в офисе.</p>
+        </div>
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-doc"></use></svg></span>
+          <h3 class="t-h5">Документы на почту</h3>
+          <p class="t-body-s">Договор, ваучер, страховка и билеты приходят на e-mail после оплаты.</p>
+        </div>
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-shield"></use></svg></span>
+          <h3 class="t-h5">Страховка и трансфер включены</h3>
+          <p class="t-body-s">Состав пакета указан в каждой карточке — то, что не входит, названо прямо.</p>
+        </div>
+        <div class="why__item reveal">
+          <span class="why__icon"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
+          <h3 class="t-h5">Связь в часы работы</h3>
+          <p class="t-body-s">Телефон и WhatsApp: пн–пт 10:00–19:00, сб 10:00–15:00. Заявка принимается круглосуточно.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.8 Как это работает -->
+  <section class="section">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.how.eyebrow">Четыре шага</div>
+          <h2 class="t-h2" data-i18n="sec.how.title">Как это работает</h2>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><span class="step__num">01</span><h3 class="t-h5">Найти тур</h3>
+          <p class="t-body-s">Город вылета, направление, даты, ночи и состав туристов — пять полей в одной строке.</p></div>
+        <div class="step reveal"><span class="step__num">02</span><h3 class="t-h5">Выбрать и забронировать</h3>
+          <p class="t-body-s">Сравните цену за двоих, питание и линию пляжа, затем закрепите вариант заявкой.</p></div>
+        <div class="step reveal"><span class="step__num">03</span><h3 class="t-h5">Оплатить</h3>
+          <p class="t-body-s">Картой, в рассрочку 0-0-12, переводом по счёту или наличными в офисе.</p></div>
+        <div class="step reveal"><span class="step__num">04</span><h3 class="t-h5">Получить документы</h3>
+          <p class="t-body-s">Договор, ваучер, страховой полис и маршрутные квитанции приходят на e-mail.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.9 Туроператоры -->
+  <section class="section" id="operators">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.op.eyebrow">Источник цен</div>
+          <h2 class="t-h2" data-i18n="sec.op.title">Туроператоры в поиске</h2>
+          <p class="t-lead" data-i18n="sec.op.lead">Цены в выдаче собираются из предложений этих операторов.</p>
+        </div>
+      </div>
+      <div class="operators">
+        <span class="operator">Anex Tour</span>
+        <span class="operator">Coral Travel</span>
+        <span class="operator">Pegas Touristik</span>
+        <span class="operator">Join UP!</span>
+        <span class="operator">TUI</span>
+        <span class="operator">Kompas</span>
+        <span class="operator">Sunmar</span>
+        <span class="operator">Space Travel</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.10 Отзывы: рейтинг, счётчики, внешние площадки и форма отзыва -->
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.rev.eyebrow">После поездки</div>
+          <h2 class="t-h2" data-i18n="sec.rev.title">Отзывы туристов</h2>
+          <p class="t-lead" data-i18n="sec.rev.lead">Что пишут после поездки: отель, даты, сборы и то, о чём стоит знать заранее.</p>
+        </div>
+        <div class="section__tools">
+          <button class="btn btn--primary" type="button" data-review-open data-i18n="rev.leave">Оставить отзыв</button>
+        </div>
+      </div>
+
+      <div class="rev-summary" data-rev-summary></div>
+      <div class="reviews-grid" data-reviews></div>
+      <!-- «Все отзывы» стоит там, где заканчивается чтение, а не над ним:
+           ссылку наверху нажимали, не прочитав ни одного отзыва -->
+      <div class="section__more">
+        <a class="btn btn--ghost" href="#" data-demo data-i18n="sec.rev.all">Все отзывы</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.11 Блог: лента с мини-описанием под каждой карточкой -->
+  <section class="section" id="blog">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.blog.eyebrow">Полезное</div>
+          <h2 class="t-h2" data-i18n="sec.blog.title">Гид по направлениям</h2>
+          <p class="t-lead" data-i18n="sec.blog.lead">Короткие разборы: сезон, отели, деньги и документы.</p>
+        </div>
+        <div class="rail-nav" data-rail-nav="articles">
+          <button class="btn-icon" type="button" data-rail-prev
+                  data-i18n-attr="aria-label:a11y.prev" aria-label="Предыдущий">
+            <svg aria-hidden="true"><use href="#i-chev-l"></use></svg>
+          </button>
+          <button class="btn-icon" type="button" data-rail-next
+                  data-i18n-attr="aria-label:a11y.next" aria-label="Следующий">
+            <svg aria-hidden="true"><use href="#i-chev-r"></use></svg>
+          </button>
+        </div>
+      </div>
+      <div class="rail" data-articles></div>
+    </div>
+  </section>
+
+  <!-- 4.12 Подписка на цены -->
+  <section class="section">
+    <div class="container">
+      <!-- Подписка — чёрная плашка того же строя, что заявка и футер: одно
+           поле и одна кнопка в строку, остальное уходит под неё -->
+      <div class="subscribe u-inverse reveal">
+        <div class="subscribe__text">
+          <span class="t-caps subscribe__eyebrow" data-i18n="foot.subEyebrow">Письмо, когда цена падает</span>
+          <h2 class="t-h3" data-i18n="foot.subTitle">Подписка на цены</h2>
+          <p class="t-lead" data-i18n="foot.subLead">Пришлём подборку горящих туров и падение цен по вашему направлению.</p>
+        </div>
+        <form class="subscribe__form field" data-subscribe novalidate>
+          <label class="u-visually-hidden" for="sub-mail" data-i18n="foot.subPlaceholder">Электронная почта</label>
+          <span class="subscribe__row">
+            <input class="field__input" id="sub-mail" type="email" data-sub-mail
+                   placeholder="name@mail.kz" autocomplete="email">
+            <button class="btn btn--lime" type="submit" data-i18n="foot.subBtn">Подписаться</button>
+          </span>
+          <span class="field__hint" data-sub-hint role="status"></span>
+          <label class="check">
+            <input type="checkbox" data-sub-agree>
+            <span class="check__box"><svg aria-hidden="true"><use href="#i-check"></use></svg></span>
+            <span data-i18n="foot.subAgree">Согласен на обработку персональных данных</span>
+          </label>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.13 Оплата и гарантии -->
+  <section class="section" id="pay">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.pay.eyebrow">Деньги и документы</div>
+          <h2 class="t-h2" data-i18n="sec.pay.title">Оплата и гарантии</h2>
+        </div>
+      </div>
+      <div class="pay-grid">
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-card"></use></svg><b>Kaspi</b><span>Оплата картой и переводом</span></div>
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-card"></use></svg><b>Halyk</b><span>Оплата картой</span></div>
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-card"></use></svg><b>Freedom</b><span>Оплата картой</span></div>
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-percent"></use></svg><b>Рассрочка 0-0-12</b><span>12 платежей без переплаты</span></div>
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>Счёт на оплату</b><span>Для юрлиц и переводов</span></div>
+        <div class="pay-tile"><svg aria-hidden="true"><use href="#i-shield"></use></svg><b>Страховка</b><span>Полис в пакете тура</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.14 SEO-блок -->
+  <section class="section section--last">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <h2 class="t-h2" data-i18n="sec.seo.title">Туры из Казахстана</h2>
+        </div>
+      </div>
+      <div class="seo-layout">
+        <div>
+          <p class="t-long">Пакетный тур из Казахстана — это перелёт, проживание, питание, страховка и трансфер одной суммой. Из Алматы и Астаны рейсы уходят чаще всего, из Шымкента, Караганды, Актобе и Атырау — по сезонным программам, поэтому цена одного и того же отеля зависит от города вылета. Стоимость в поиске указана за двоих и в тенге: так её проще сравнивать между вкладками.</p>
+          <p class="t-long" style="margin-top: var(--s-4)">Летом основное направление — Турция: Анталья, Кемер, Сиде, Аланья и Белек. Зимой спрос смещается в Египет, ОАЭ, Таиланд и на Хайнань, а на Наурыз и новогодние праздники вылеты бронируют заранее — в эти даты цена выше обычной. Для граждан Казахстана большинство массовых направлений не требует визы; там, где виза нужна, это указано на плитке направления.</p>
+          <p class="t-long" style="margin-top: var(--s-4)">Внутренние направления — Алаколь, Боровое, Кендерли, Туркестан и Сарыагаш — берут короткими заездами и без перелёта: два–четыре дня, дорога на машине или поезде и цена заметно ниже зарубежной. Сезон у каждого свой: Алаколь и Боровое — с июня по август, Сарыагаш и Туркестан работают круглый год.</p>
+          <p class="t-long" style="margin-top: var(--s-4)">Поиск сравнивает предложения операторов по одной цене за двоих: в неё уже входят перелёт, проживание, выбранное питание, страховка и трансфер из аэропорта. Фильтры выдачи повторяют то, о чём спрашивают в переписке чаще всего: линия пляжа, звёздность, тип отеля, услуги, время вылета и прямой рейс. Дата и город вылета остаются в адресе страницы, поэтому подобранную выдачу можно отправить ссылкой и вернуться к ней позже.</p>
+        </div>
+
+        <!-- Заявка едет вместе с текстом: длинный текст читают долго -->
+        <aside class="promo-aside u-inverse">
+          <span class="promo-aside__mark" data-i18n="promo.mark">Подбор менеджером</span>
+          <h3 data-i18n="promo.title">Не нашли подходящий тур?</h3>
+          <p data-i18n="promo.text">Оставьте заявку: менеджер подберёт варианты по вашему бюджету, датам и составу и пришлёт их в WhatsApp.</p>
+          <button class="btn btn--lime btn--block" type="button" data-lead-open data-i18n="promo.btn">Оставить заявку</button>
+          <span class="t-meta" data-i18n="promo.note">Отвечаем в часы работы: пн–пт 10:00–19:00</span>
+        </aside>
+      </div>
+      <!-- Перелинковка: страна × город вылета -->
+      <div class="section__head" style="margin-top: var(--s-24)">
+        <div>
+          <div class="t-caps section__eyebrow" data-i18n="sec.links.eyebrow">Быстрый переход</div>
+          <h2 class="t-h3" data-i18n="sec.links.title">Туры по направлениям и городам вылета</h2>
+        </div>
+      </div>
+      <!-- На телефоне список раскрывается по кнопке: пять стран по шесть
+           городов — это тридцать ссылок подряд перед футером -->
+      <div class="seo-links" data-seo-links></div>
+      <div class="seo-links__more">
+        <button class="btn btn--ghost btn--block" type="button" data-seo-more
+                aria-expanded="false" data-i18n="seo.more">Показать ещё</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 4.15 Футер: чёрный блок, закрывающий страницу -->
+<footer class="site-footer" id="contacts">
+  <div class="container">
+    <div class="site-footer__panel">
+      <!-- Подвал начинался сразу со столбцов ссылок и читался как техническая
+           сноска. Заголовок называет, чей это сайт и что здесь ищут. -->
+      <div class="site-footer__head">
+        <h2 class="t-h3" data-i18n="foot.title">trips.kz — туры из Казахстана</h2>
+        <p data-i18n="foot.lead">Поиск пакетных туров по предложениям туроператоров: цена за двоих в тенге, даты, отель и питание на одном экране.</p>
+      </div>
+      <div class="site-footer__cols">
+        <div>
+          <h3 data-i18n="foot.dest">Направления</h3>
+          <ul data-footer-dest></ul>
+        </div>
+        <div>
+          <h3 data-i18n="foot.company">Компания</h3>
+          <ul>
+            <li><a href="#" data-demo data-i18n="nav.about">О компании</a></li>
+            <li><a href="#" data-demo>Вакансии</a></li>
+            <li><a href="#blog" data-i18n="nav.blog">Блог</a></li>
+            <li><a href="#" data-demo>Договор-оферта</a></li>
+            <li><a href="#" data-demo>Политика конфиденциальности</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 data-i18n="foot.tourists">Туристам</h3>
+          <ul>
+            <li><a href="#pay" data-i18n="nav.payment">Оплата</a></li>
+            <li><a href="#" data-demo>Документы для поездки</a></li>
+            <li><a href="#" data-demo>Визы и правила въезда</a></li>
+            <li><a href="#" data-demo>Частые вопросы</a></li>
+            <li><a href="#" data-demo>Страхование</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 data-i18n="foot.contacts">Контакты</h3>
+          <address style="font-style: normal">
+            <a href="tel:+77270000000">+7 (727) 000-00-00</a>
+            <a href="tel:+77170000000">+7 (717) 000-00-00</a>
+            <a href="#" data-demo data-i18n="top.whatsapp">WhatsApp</a>
+            <span class="t-body-s" style="display:block; margin-top: var(--s-2)">Офисы: Алматы, Астана</span>
+            <span class="t-body-s" style="display:block" data-i18n="top.hours">Пн–Пт 10:00–19:00, Сб 10:00–15:00</span>
+          </address>
+          <h3 style="margin-top: var(--s-5)" data-i18n="foot.apps">Приложения</h3>
+          <ul>
+            <li><a href="#" data-demo>iOS</a></li>
+            <li><a href="#" data-demo>Android</a></li>
+            <li><a href="#" data-demo>Instagram · Telegram · YouTube</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__legal">
+        <span data-i18n="foot.rights">© 2026 trips.kz</span>
+        <span>Снимок первого экрана сгенерирован нейросетью. Остальные фотографии: Wikimedia Commons, CC BY / CC BY-SA — см. assets/img/credits.json</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Нижняя панель телефона: пять действий, к которым возвращаются на любом
+     экране страницы. Профиль и избранное стоят здесь, а не в шапке, — большой
+     палец достаёт до низа, а шапка освободилась под город и связь. -->
+<nav class="tabbar" aria-label="Быстрые действия">
+  <a class="tabbar__item is-active" href="index.html" aria-current="page">
+    <span class="tabbar__ico"><svg aria-hidden="true"><use href="#i-home"></use></svg></span>
+    <span data-i18n="bar.home">Главное</span>
+  </a>
+  <button class="tabbar__item" type="button" data-chat-open>
+    <span class="tabbar__ico"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
+    <span data-i18n="bar.chat">Чат</span>
+  </button>
+  <button class="tabbar__item tabbar__item--accent" type="button" data-search-open>
+    <span class="tabbar__ico"><svg aria-hidden="true"><use href="#i-search"></use></svg></span>
+    <span data-i18n="bar.search">Поиск</span>
+  </button>
+  <button class="tabbar__item" type="button" data-favorites-open>
+    <span class="tabbar__ico">
+      <svg aria-hidden="true"><use href="#i-heart"></use></svg>
+      <span class="tabbar__count" data-fav-count></span>
+    </span>
+    <span data-i18n="bar.fav">Избранное</span>
+  </button>
+  <button class="tabbar__item" type="button" data-profile-open>
+    <span class="tabbar__ico"><svg aria-hidden="true"><use href="#i-user"></use></svg></span>
+    <span data-i18n="bar.profile">Профиль</span>
+  </button>
+</nav>
+
+<!-- Шторка поиска: сюда переезжает форма первого экрана целиком -->
+<div class="sheet sheet--search" data-search-sheet data-open="false">
+  <div class="sheet__scrim" data-search-close></div>
+  <div class="sheet__panel" role="dialog" aria-modal="true"
+       data-i18n-attr="aria-label:f.search" aria-label="Найти туры">
+    <div class="sheet__head">
+      <b class="t-h6" data-i18n="f.search">Найти туры</b>
+      <button class="btn-icon" type="button" data-search-close
+              data-i18n-attr="aria-label:nav.close" aria-label="Закрыть">
+        <svg aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </div>
+    <div class="sheet__body" data-search-sheet-body></div>
+  </div>
+</div>
+
+<!-- 1.1 Определение города при первом заходе -->
+<aside class="city-prompt" data-open="false" aria-live="polite">
+  <p class="t-h6" data-city-q>Ваш город вылета — Алматы?</p>
+  <div class="city-prompt__row">
+    <button class="btn btn--primary btn--sm" type="button" data-city-yes data-i18n="city.yes">Да</button>
+    <button class="btn btn--ghost btn--sm" type="button" data-city-other data-i18n="city.no">Выбрать другой</button>
+  </div>
+</aside>
+
+<div class="toasts" aria-live="polite"></div>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/format.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>

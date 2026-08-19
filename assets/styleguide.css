@@ -1,0 +1,264 @@
+/* ============================================================================
+   Оформление самой страницы стайлгайда: подписи, спецификации, сетки образцов.
+   Продуктовые компоненты живут в components.css и здесь не переопределяются.
+   ========================================================================== */
+
+.sg-section {
+  padding-block: var(--s-24) var(--s-16);
+  border-top: 1px solid var(--c-line);
+}
+.sg-section:first-of-type { border-top: 0; }
+
+.sg-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-12);
+}
+.sg-section__head p { max-width: 60ch; color: var(--c-ink-2); }
+
+.sg-index {
+  font-family: var(--font-mono);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Блок образца: подпись сверху, образец снизу */
+.sg-block { margin-top: var(--s-8); }
+.sg-block__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-3);
+  margin-bottom: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--c-line);
+}
+.sg-block__label h3 {
+  font-size: var(--t-body);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+.sg-note {
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+  max-width: 62ch;
+}
+
+/* Имя токена */
+.sg-token {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0;
+  color: var(--c-ink-2);
+  background: var(--c-surface);
+  border-radius: var(--r-xs);
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.sg-src {
+  font-family: var(--font-mono);
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+.sg-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+.sg-demo--stack { flex-direction: column; align-items: stretch; }
+.sg-demo--pad {
+  padding: var(--s-5);
+  background: var(--c-surface);
+  border-radius: var(--r-l);
+}
+
+/* --- Цвет ---------------------------------------------------------------- */
+.sg-swatches {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.sg-swatch {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);
+  overflow: hidden;
+  background: var(--c-white);
+}
+.sg-swatch__chip { height: 84px; }
+.sg-swatch__meta {
+  padding: var(--s-2);
+  display: grid;
+  gap: 2px;
+}
+.sg-swatch__name {
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+}
+.sg-swatch__hex {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  color: var(--c-ink-2);
+  text-transform: uppercase;
+}
+.sg-swatch__use { font-size: var(--t-micro); color: var(--c-ink-2); }
+
+/* --- Типографика --------------------------------------------------------- */
+.sg-type-row {
+  display: grid;
+  gap: var(--s-2);
+  padding-block: var(--s-4);
+  border-bottom: 1px solid var(--c-line);
+}
+@media (min-width: 1024px) {
+  .sg-type-row {
+    grid-template-columns: 230px minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s-6);
+  }
+}
+.sg-type-spec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  align-items: baseline;
+}
+
+/* --- Ритм ---------------------------------------------------------------- */
+.sg-space-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-2);
+}
+.sg-space-bar {
+  /* Полоса меряет отступ — она обязана быть точным прямоугольником без скругления. */
+  height: 14px;
+  background: var(--c-cool);
+}
+.sg-radius-grid {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+.sg-radius {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  background: var(--c-surface-cool);
+  border: 1px solid var(--c-line);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  color: var(--c-ink-2);
+}
+
+/* --- Сетка --------------------------------------------------------------- */
+.sg-grid-preview {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  padding: var(--s-3);
+  background: var(--c-white);
+}
+.sg-grid-preview .grid > span {
+  height: 60px;
+  background: var(--c-surface-cool);
+  border-radius: var(--r-xs);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--t-nano);
+  color: var(--c-ink-3);
+}
+
+/* --- Карточки туров ------------------------------------------------------ */
+.sg-tours {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+/* --- Движение ------------------------------------------------------------ */
+.sg-motion {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.sg-motion__track {
+  position: relative;
+  height: 44px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  overflow: hidden;
+}
+.sg-motion__dot {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 30px; height: 30px;
+  margin-top: -15px;
+  border-radius: var(--r-circle);
+  background: var(--c-ink);
+}
+.is-running .sg-motion__dot {
+  animation: sg-slide 1.2s var(--sg-ease, var(--ease-out)) both;
+}
+@keyframes sg-slide {
+  from { left: 6px; }
+  to   { left: calc(100% - 36px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-running .sg-motion__dot { animation: none; }
+}
+
+/* --- Правила ------------------------------------------------------------- */
+.sg-rules {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.sg-rule {
+  padding-top: var(--s-3);
+  border-top: 2px solid var(--c-ink);
+}
+.sg-rule--no { border-top-color: var(--c-signal); }
+.sg-rule h4 {
+  font-size: var(--t-body);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+  margin-bottom: var(--s-1);
+}
+.sg-rule p { font-size: var(--t-body-s); color: var(--c-ink-2); }
+
+/* --- Оглавление ---------------------------------------------------------- */
+.sg-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.sg-toc a {
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  padding: 7px var(--s-3);
+  transition: border-color var(--dur-2) var(--ease-out),
+              color var(--dur-2) var(--ease-out);
+}
+.sg-toc a:hover { border-color: var(--c-ink); color: var(--c-ink); }
+
+.sg-credits {
+  font-size: var(--t-micro);
+  color: var(--c-ink-3);
+  line-height: var(--lh-long);
+}
+.sg-credits a { text-decoration: underline; text-underline-offset: 2px; }

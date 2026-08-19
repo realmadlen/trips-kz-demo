@@ -1,0 +1,4139 @@
+/* ============================================================================
+   trips.kz — компоненты двух страниц: главная и выдача.
+   Поверх tokens.css → base.css → components.css. Собственных значений здесь нет:
+   всё выражено токенами. Два ярких акцента (--c-lime, --c-blue) введены в
+   tokens.css по §2.2 промта и работают только на смысле: лайм — выгода и
+   срочность, синий — действие и навигация.
+   ========================================================================== */
+
+/* display: flex/grid у компонентов сильнее пользовательского [hidden],
+   поэтому скрытие переключателей вида объявлено явно. */
+[hidden] { display: none !important; }
+
+:root {
+  /* Шапка стала одной строкой вместо «служебная полоса + шапка»: было
+     44 + 68 = 112px, стало 60px. Первый экран получил эти 52px. */
+  --header-h: 60px;
+  --header-h-compact: 52px;
+  --tabbar-h: 64px;
+  --filters-w: 300px;
+}
+@media (max-width: 767px) { :root { --header-h: 56px; --header-h-compact: 56px; } }
+
+/* ============================================================================
+   1. Служебная строка: на главной и в выдаче её больше нет — всё уехало в одну
+   строку шапки. Правила остаются: строкой пользуется styleguide, а классы
+   .topbar__wa, .topbar__icon и .city-pick живут теперь внутри шапки.
+   ========================================================================== */
+
+.topbar {
+  border-bottom: 1px solid var(--c-line);
+  background: var(--c-page);
+}
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  min-height: 44px;
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+  /* На узком экране город и переключатели не помещаются в строку:
+     служебная строка переносится, а не выталкивает страницу вбок. */
+  flex-wrap: wrap;
+  padding-block: var(--s-1);
+}
+@media (min-width: 480px) { .topbar__inner { flex-wrap: nowrap; padding-block: 0; } }
+.topbar__group { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+/* Селектор с .topbar, а не голый класс: правила .topbar__link и .lang стоят в
+   файле ниже, и при равной специфичности скрытие ими перебивалось. */
+.topbar .topbar__group--hide-s { display: none; }
+@media (min-width: 1024px) { .topbar .topbar__group--hide-s { display: flex; } }
+/* Кружок «Войти» — замена текстовой ссылки, поэтому живёт ровно наоборот:
+   на телефоне вместо неё, на широком экране уступает ей место */
+.topbar__icon.topbar__icon--s { display: inline-flex; }
+@media (min-width: 1024px) { .topbar__icon.topbar__icon--s { display: none; } }
+
+.topbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  color: var(--c-ink-2);
+  transition: color var(--dur-2) var(--ease-out);
+}
+.topbar__link:hover { color: var(--c-ink); }
+.topbar__link svg { width: 16px; height: 16px; }
+.topbar__phone {
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Два действия служебной строки сжаты до знаков: словами «WhatsApp»,
+   «Обратный звонок» и «Избранное» строка съедала место, которое нужно
+   городу вылета. Обратный звонок остался в меню и футере — там он читается
+   как пункт, а не как четвёртая ссылка подряд. */
+.topbar__wa {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: var(--r-circle);
+  background: var(--c-wa);
+  color: var(--c-white);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+.topbar__wa:hover { background: var(--c-wa-deep); }
+.topbar__wa svg { width: 18px; height: 18px; }
+
+.topbar__icon {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: var(--r-circle);
+  color: var(--c-ink-2);
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.topbar__icon:hover { background: var(--c-surface); color: var(--c-ink); }
+.topbar__icon svg { width: 18px; height: 18px; }
+/* Счётчик появляется только когда в избранном что-то есть */
+.topbar__count {
+  position: absolute;
+  top: -2px; right: -4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px; height: 16px;
+  padding-inline: 4px;
+  border-radius: var(--r-pill);
+  background: var(--c-blue);
+  color: var(--c-white);
+  font-size: var(--t-nano);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+  font-variant-numeric: tabular-nums;
+}
+.topbar__count:empty { display: none; }
+
+/* Кнопка выбора города вылета — та же геометрия, что у поля ввода */
+.city-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  padding-inline: var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+.city-pick:hover { border-color: var(--c-ink); }
+.city-pick svg { width: 14px; height: 14px; color: var(--c-ink-3); }
+
+/* Сегментный переключатель: валюта, язык, вид выдачи, цена за двоих/одного */
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+}
+.seg button {
+  min-height: 30px;
+  min-width: 38px;
+  padding-inline: var(--s-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+  color: var(--c-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.seg button:hover { color: var(--c-ink); }
+.seg button[aria-pressed="true"] { background: var(--c-ink); color: var(--c-white); }
+/* Синий — «действие и навигация»: активный таб и активный вид выдачи */
+.seg--blue button[aria-pressed="true"] { background: var(--c-blue); color: var(--c-white); }
+.seg--tap button { min-height: var(--tap-min); }
+
+/* ============================================================================
+   2. Шапка: меню, мегапанель, компактное состояние
+   ========================================================================== */
+
+/* Шапка в одну строку. Слева логотип и город вылета, в середине разделы,
+   справа связь, настройки и вход. На телефоне остаются логотип, город,
+   трубка и бургер — избранное и профиль стоят в нижней панели. */
+.site-header__inner { gap: var(--s-3); }
+@media (min-width: 1120px) { .site-header__inner { gap: var(--s-5); } }
+.site-header__side {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+  min-width: 0;
+}
+.site-header .prefs { flex: none; min-width: 0; }
+/* Город уступает ширину первым и обрезается многоточием: на 360px в строке
+   стоят ещё логотип, WhatsApp, трубка и бургер, и жёсткая ширина у капсулы
+   выталкивала бургер за край. */
+.site-header__city { flex: 0 1 auto; min-width: 0; }
+/* Капсулы города и настроек подняты до 40px: рядом с 44-пиксельными кружками
+   32px читались как элементы другого, более мелкого набора. */
+.site-header .city-pick { min-height: 40px; padding-inline: var(--s-3); font-size: var(--t-body-s); }
+/* Самолётик у города — только на десктопе: на телефоне он забирал 28px
+   строки, в которой каждый пиксель занят. */
+@media (max-width: 1023.98px) {
+  .city-pick__plane { display: none; }
+  .site-header .city-pick { padding-inline: var(--s-3) var(--s-2); }
+  .site-header__inner { gap: var(--s-2); }
+  .site-header__side { gap: var(--s-1); }
+}
+/* Круглые значки шапки держат размер тач-цели и не сплющиваются: во flex-строке
+   у них отбирали ширину соседи, и кружок превращался в овал. */
+.site-header__side .topbar__wa,
+.site-header__side .topbar__icon {
+  flex: none;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  aspect-ratio: 1;
+}
+.site-header__side .topbar__wa svg,
+.site-header__side .topbar__icon svg { width: 20px; height: 20px; }
+.site-header__side .topbar__icon { border: 1px solid var(--c-line-strong); }
+.site-header__side .topbar__icon:hover { border-color: var(--c-ink); background: var(--c-white); }
+.site-header__city .city-pick { max-width: 40vw; }
+.site-header__city .city-pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Город и настройки раскрываются вниз от своей кнопки, поэтому позиционируются
+   от неё, а не от шапки */
+.site-header__city .pop, .prefs__pop { min-width: 240px; }
+
+/* Ниже 1024 в шапке остаётся только связь: остальное дублировано нижней
+   панелью и бургером, а строка должна вмещать город целиком. */
+.site-header__wide, .site-header__phone, .site-header__login { display: none; }
+.site-header__call { display: inline-flex; }
+@media (min-width: 1024px) {
+  .site-header__wide { display: inline-flex; }
+  .site-header__phone, .site-header__login { display: inline-flex; }
+  .site-header__call { display: none; }
+}
+.site-header__login { gap: var(--s-2); --btn-h: var(--tap-min); }
+.site-header__login svg { width: 18px; height: 18px; color: var(--c-ink-2); }
+.site-header__phone { font-size: var(--t-body-s); white-space: nowrap; }
+
+/* Язык и валюта — одна кнопка рядом с городом: два списка в одной панели */
+.prefs__pop { padding: var(--s-4); width: max-content; }
+.prefs__pop .pop__group + .pop__group { margin-top: var(--s-4); }
+.seg--block { display: flex; }
+.seg--block button { flex: 1 1 0; }
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: var(--s-4);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+/* Строка разделов включается с 1280, а не с 1120: на 1120 логотип, город,
+   язык с валютой, связь и вход занимают строку целиком, и четыре раздела
+   выталкивали её за край экрана. */
+@media (min-width: 1280px) { .nav { display: flex; } }
+@media (min-width: 1440px) { .nav { gap: var(--s-5); } }
+/* Разделы уступают место по мере сужения строки: полный состав — в бургере */
+.nav__item--wide, .nav__item--xwide { display: none; }
+@media (min-width: 1440px) { .nav__item--wide { display: block; } }
+@media (min-width: 1680px) { .nav__item--xwide { display: block; } }
+
+.nav__item { position: relative; }
+.nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap-min);
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-2) var(--ease-out);
+}
+.nav__link:hover, .nav__item[data-open="true"] > .nav__link { color: var(--c-ink); }
+.nav__link svg { width: 14px; height: 14px; }
+
+.nav__panel {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: calc(var(--s-4) * -1);
+  z-index: var(--z-overlay);
+  display: none;
+  gap: var(--s-6);
+  min-width: 520px;
+  padding: var(--s-5);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  box-shadow: var(--shadow-1);
+}
+.nav__item[data-open="true"] .nav__panel { display: grid; grid-template-columns: 1fr 1fr; }
+.nav__col h3 {
+  margin-bottom: var(--s-2);
+  font-size: var(--t-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+.nav__col a {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 32px;
+  align-items: center;
+  color: var(--c-ink-body);
+  transition: color var(--dur-2) var(--ease-out);
+}
+.nav__col a:hover { color: var(--c-blue); }
+.nav__col span {
+  color: var(--c-ink-3);
+  font-size: var(--t-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Бургер стоит на всех ширинах: строка навигации показывает восемь разделов,
+   а полный состав сайта живёт в одном месте и открывается с любого экрана. */
+.burger { display: inline-flex; }
+
+/* Меню — полная карта сайта. Открывается ПОД шапкой, а не поверх неё: шапка
+   со всем своим содержимым (логотип, город, WhatsApp, трубка и сам бургер)
+   остаётся на месте, поэтому у листа нет ни своего логотипа, ни отдельной
+   кнопки закрытия — закрывает тот же бургер, ставший крестиком. */
+.menu-sheet {
+  position: fixed;
+  top: var(--header-h);
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-sticky);
+  display: none;
+  background: var(--c-page);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.menu-sheet[data-open="true"] { display: block; }
+/* Ниже 1024 лист заканчивается над нижней панелью, а не под ней */
+@media (max-width: 1023px) { .menu-sheet { padding-bottom: var(--tabbar-h); } }
+/* Крестик поворачивается в исходное положение — знак меняется движением,
+   а не подменой картинки */
+.burger svg { transition: transform var(--dur-3) var(--ease-in-out); }
+.burger.is-open svg { transform: rotate(90deg); }
+
+/* Верх меню остался только на странице выдачи: там нет нижней панели, и
+   «Найти туры», «Войти» и «Избранное» больше взять негде. На главной этот
+   блок убран — см. подвал меню ниже. */
+.menu-sheet__tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-3);
+  padding-block: var(--s-5);
+  border-bottom: 1px solid var(--c-line);
+}
+.menu-sheet__tools .btn svg { width: 18px; height: 18px; }
+.menu-sheet__row { display: flex; gap: var(--s-2); }
+.menu-sheet__login { flex: 1 1 auto; min-width: 0; }
+.menu-sheet__fav { position: relative; flex: none; width: var(--tap-min); height: var(--tap-min); }
+.menu-sheet__fav .topbar__count { top: 0; right: 0; }
+@media (min-width: 1024px) { .menu-sheet__tools { display: none; } }
+
+/* Подвал меню: язык, валюта и связь — под картой сайта, а не над ней.
+   Наверху раньше стояли «Найти туры», «Войти» и «Избранное»; все три уже
+   есть в нижней панели, и меню начиналось не с того, за чем его открывают.
+   Настройки же меняют раз за визит — их место такое же, как в подвале сайта. */
+.menu-sheet__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-block: var(--s-5) var(--s-8);
+  border-top: 1px solid var(--c-line);
+}
+/* Язык и валюта — два одинаковых переключателя в строку. Один компонент на
+   оба: разными компонентами они расходились по высоте на 10px. */
+.menu-sheet__switches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+.menu-sheet__switches .seg { min-width: 0; }
+.menu-sheet__switches .seg button { min-width: 0; padding-inline: var(--s-1); }
+/* Связь под переключателями: номер — ссылкой со знаком трубки, график —
+   строкой под ним. Это последнее, что видно в меню, и в меню за этим тоже
+   заходят: «а во сколько они работают». */
+.menu-sheet__contact { display: flex; flex-direction: column; gap: var(--s-1); }
+.menu-sheet__tel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap-min);
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+}
+.menu-sheet__tel svg { flex: none; width: 18px; height: 18px; color: var(--c-ink-3); }
+.menu-sheet__hours { font-size: var(--t-body-s); color: var(--c-ink-2); }
+/* На десктопе язык, валюта и связь стоят в самой шапке — в меню они лишние */
+@media (min-width: 1024px) { .menu-sheet__foot { display: none; } }
+
+.menu-sheet__list { padding-block: var(--s-6); }
+/* Там, где под картой сайта ничего нет (страница выдачи), она сама держит
+   отбивку от края экрана */
+.menu-sheet__list:last-child { padding-bottom: var(--s-16); }
+.menu-sheet__grid { display: grid; gap: var(--s-8); }
+@media (min-width: 768px)  { .menu-sheet__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Три колонки, а не четыре: шесть разделов ложатся в два полных ряда,
+   и карта сайта не заканчивается пустой половиной строки. */
+@media (min-width: 1120px) { .menu-sheet__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-12) var(--s-16); } }
+.menu-sheet__col > h3 {
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--c-line);
+  margin-bottom: var(--s-1);
+}
+.menu-sheet__col a,
+.menu-sheet__sub a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: var(--tap-min);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--t-body);
+  color: var(--c-ink);
+}
+.menu-sheet__col a:hover, .menu-sheet__sub a:hover { color: var(--c-blue); }
+.menu-sheet__sub a span + span { color: var(--c-ink-3); font-variant-numeric: tabular-nums; font-size: var(--t-meta); }
+@media (min-width: 1120px) {
+  .menu-sheet__col a, .menu-sheet__sub a { min-height: 38px; font-size: var(--t-body-s); }
+}
+
+/* Шапка при скролле садится по высоте; состав кнопок не меняется —
+   одна «Найти туры», отдельная лупа и бургер. */
+.site-header.is-compact .site-header__inner { min-height: var(--header-h-compact); }
+
+/* ============================================================================
+   3. Первый экран
+   ========================================================================== */
+
+/* Первый экран обязан кончаться на форме: карточка «откуда — куда — даты»
+   целиком видна без прокрутки на любой ширине. Поэтому фотография не задаёт
+   высоту, а получает остаток: --hero-reserve — это всё, что стоит над и под
+   ней (шапка, отступы, сама панель поиска за вычетом наезда, воздух снизу). */
+.hero { padding-top: var(--s-6); --hero-reserve: 560px; }
+@media (min-width: 1024px) { .hero { --hero-reserve: 470px; } }
+@media (min-width: 1120px) { .hero { --hero-reserve: 260px; } }
+.hero__media {
+  position: relative;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+  aspect-ratio: 21 / 9;
+  /* width задан явно: при auto браузер переносит ограничение max-height обратно
+     на ширину — фотография сужалась и не доходила до края панели поиска. */
+  width: 100%;
+  /* min-height ниже max-height намеренно: в CSS минимум сильнее максимума,
+     и прежние 380px не дали бы фотографии сжаться на ноутбуке 1280×720. */
+  min-height: 220px;
+  max-height: max(220px, calc(100vh - var(--hero-reserve)));
+  max-height: max(220px, calc(100svh - var(--hero-reserve)));
+}
+/* Снимок кладётся абсолютно, а не потоком: на телефоне высоту кадру задаёт
+   flex, и height:100% у картинки в потоке разрешался в ноль — вместо фото
+   оставалась серая подложка. */
+.hero__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+/* Затемнения на первом экране больше нет — ни заливки на кадре, ни градиента
+   под текстом. Их было два слоя, и вместе они забирали до 82% чёрного в левом
+   нижнем углу: море там переставало быть синим. Кадр стоит чистым, читаемость
+   белого держится на самом снимке — левый нижний угол у него глубокая вода. */
+.hero__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--s-3);
+  padding: var(--s-6);
+  color: var(--c-white);
+}
+@media (min-width: 768px) { .hero__text { padding: var(--s-12) var(--s-8); } }
+/* Панель поиска наезжает на фотографию на --s-12; на столько же увеличен
+   нижний отступ текста, иначе лид упирается в её край без просвета. */
+@media (min-width: 1024px) { .hero__text { padding-bottom: calc(var(--s-12) * 2); } }
+.hero__text .t-display { color: var(--c-white); max-width: 18ch; }
+.hero__text .t-lead { color: var(--c-white); max-width: 52ch; }
+.hero__lead--short { display: none; }
+.hero__eyebrow { color: var(--c-lime); }
+
+/* Панель поиска ложится на фотографию — приём [R1], тень усиливается */
+.hero__panel { margin-top: var(--s-4); }
+@media (min-width: 1024px) {
+  .hero__panel { margin-top: calc(var(--s-12) * -1); position: relative; z-index: 1; }
+}
+
+/* --- Телефон: первый экран считается, а не подбирается ------------------- */
+/* Контейнер занимает ровно свободную высоту между шапкой и нижней панелью,
+   форма берёт свою, фотография — весь остаток. Что бы ни случилось с длиной
+   подписей, карточка поиска целиком остаётся на первом экране. */
+@media (max-width: 767px) {
+  .hero { padding-top: var(--s-3); }
+  .hero > .container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    min-height: calc(100vh - var(--header-h) - var(--tabbar-h) - var(--s-6));
+    min-height: calc(100svh - var(--header-h) - var(--tabbar-h) - var(--s-6));
+  }
+  /* Минимум поднят со 120 до 168px: в полосе теперь стоят и заголовок в две
+     строки, и подзаголовок, и на коротком экране им нужен пол под ногами.
+     Максимум 82vw (320px на iPhone) — полоса перестала быть портретной:
+     в вертикальной рамке cover показывал только центр кадра, а там пена. */
+  .hero__media {
+    flex: 1 1 auto;
+    aspect-ratio: auto;
+    min-height: 168px;
+    max-height: 82vw;
+  }
+  /* Кадр сдвинут влево: в полосе видно не центр, а левую часть снимка, где
+     глубокая вода. Заголовок ложится на синее, пена уходит вправо и вниз —
+     контраст поднимается с 4,8 до 8,8 : 1 без единого пикселя затемнения.
+     15%, а не 0: у левого края кадр остаётся одной водой, без берега. */
+  .hero__media img { object-position: 15% center; }
+  /* Текст поднят над нижним краем: у самого низа проходит полоса прибоя, и
+     подзаголовок садился прямо на неё. Подъём не фиксированный, а по высоте
+     экрана: 60px на обычном телефоне, но на 640px полоса кадра сама всего
+     180px, и жёсткие 60 выдавили бы заголовок за её верхний край. */
+  .hero__text {
+    padding: var(--s-4) var(--s-4) clamp(var(--s-4), 7svh, calc(var(--s-6) * 2));
+    gap: var(--s-2);
+  }
+  /* Подзаголовок вернулся на телефон: без затемнения полоса кадра стала
+     светлее и легче, и одному заголовку в ней не за что зацепиться. Держится
+     в двух строках — третья съедала бы фотографию. */
+  .hero__text .t-display { font-size: var(--t-h2); max-width: 20ch; }
+  .hero__lead--full { display: none; }
+  .hero__lead--short {
+    /* 16px, а не штатные для телефона 18: подзаголовок стоит на фотографии,
+       и с 18px он лез в третью строку на 360px. */
+    display: block;
+    font-size: var(--t-body);
+    max-width: 34ch;
+  }
+  /* Свободную высоту между фотографией и нижней панелью забирает карточка
+     поиска, а не пустота. Grow у кадра намеренно огромный: он растёт первым
+     и упирается в свои 82vw, после чего остаток по правилам flex переходит
+     карточке. Порядок важен — при равном grow фотография не доросла бы до
+     своего потолка и стала бы ниже, чем нужно. */
+  .hero__media { flex: 1000 1 auto; }
+  .hero__panel { flex: 1 1 auto; display: flex; margin-top: 0; }
+
+  /* Форма первого экрана сжата до двух колонок: пять полей в столбик
+     занимали 380px и выталкивали фотографию за край экрана. */
+  .hero__panel .search {
+    flex: 1 1 auto;
+    padding: var(--s-3);
+    /* Ряд полей занимает всю высоту карточки, и лишние пиксели расходятся
+       по зазорам между полями, а не копятся одним провалом под вкладками. */
+    grid-template-rows: auto 1fr;
+  }
+  .hero__panel .search__row { align-content: space-between; }
+  .hero__panel .search__row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+  .hero__panel .search__row > .field[data-field="guests"],
+  .hero__panel .search__submit { grid-column: 1 / -1; }
+  .hero__panel .search__submit { --btn-h: 48px; }
+  .hero__panel .field__label { margin-bottom: 2px; }
+  /* Поля ужаты по горизонтали: со штатными полями и зазорами «Алматы»
+     в половинной колонке обрезалось в «Алма…». */
+  .hero__panel .field__control { padding-inline: var(--s-2); gap: var(--s-1); }
+  .hero__panel .field__control > svg { width: 16px; height: 16px; }
+}
+
+/* Вкладки на первом экране стоят там, где есть лишняя высота. Считается это
+   точно: 168px минимум под кадр + 350 карточка с вкладками + 15 зазор + 72
+   шапка + 64 нижняя панель + 30 воздуха = 699. Ниже 720px вкладки в шапке
+   формы сняты — они и так есть в шторке поиска, а карточка иначе уезжает
+   под нижнюю панель. */
+@media (max-width: 767px) and (max-height: 719px) {
+  .hero__panel .search__tabs { display: none; }
+  .hero__panel .search { grid-template-rows: minmax(0, 1fr); }
+}
+
+/* Старые четырёхдюймовые экраны: между шапкой и нижней панелью остаётся
+   около 400px, и полосе кадра достаётся 120. Подзаголовок и подъём текста
+   там сняты — иначе форма поиска уезжает под нижнюю панель, а первый экран
+   у нас обязан кончаться на ней. */
+@media (max-width: 767px) and (max-height: 620px) {
+  .hero__media { min-height: 120px; }
+  .hero__text { padding-bottom: var(--s-4); }
+  .hero__lead--short { display: none; }
+}
+
+/* ============================================================================
+   4. Поисковый модуль
+   ========================================================================== */
+
+.search__tabs {
+  display: flex;
+  gap: var(--s-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: calc(var(--s-1) * -1);
+  padding: var(--s-1);
+}
+.search__tabs::-webkit-scrollbar { display: none; }
+.tab {
+  min-height: 40px;
+  padding-inline: var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out),
+              color var(--dur-2) var(--ease-out),
+              border-color var(--dur-2) var(--ease-out);
+}
+.tab:hover { border-color: var(--c-line-strong); color: var(--c-ink); }
+/* Выбранная вкладка — синий контур по белому, а не заливка: залитая капсула
+   держала на себе столько же внимания, сколько лаймовая «Найти туры», и
+   первый экран получал два конкурирующих акцента вместо одного. Обводку
+   утолщает внутренняя тень, чтобы выбор читался без второго цвета. */
+.tab[aria-selected="true"] {
+  background: var(--c-white);
+  border-color: var(--c-blue);
+  color: var(--c-blue);
+  box-shadow: inset 0 0 0 1px var(--c-blue);
+}
+.tab[aria-selected="true"]:hover {
+  border-color: var(--c-blue-deep);
+  color: var(--c-blue-deep);
+  box-shadow: inset 0 0 0 1px var(--c-blue-deep);
+}
+
+/* Поле с раскрывающейся панелью */
+.field { position: relative; }
+.field__control--btn {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+}
+.field__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-body);
+  color: var(--c-ink);
+}
+.field__value--empty { color: var(--c-ink-3); }
+
+.pop {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  z-index: var(--z-overlay);
+  display: none;
+  min-width: 100%;
+  max-width: min(92vw, 620px);
+  max-height: min(70vh, 520px);
+  overflow: auto;
+  padding: var(--s-3);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  box-shadow: var(--shadow-2);
+}
+.field[data-open="true"] .pop { display: block; }
+.field[data-open="true"] .field__control { border-color: var(--c-ink); }
+.pop--right { left: auto; right: 0; }
+.pop__group + .pop__group { margin-top: var(--s-3); }
+.pop__title {
+  margin-bottom: var(--s-1);
+  font-size: var(--t-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+.pop__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 38px;
+  padding: var(--s-1) var(--s-2);
+  border: 0;
+  border-radius: var(--r-xs);
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--c-ink-body);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.pop__opt:hover { background: var(--c-surface); }
+.pop__opt[aria-selected="true"] { background: var(--c-blue-soft); color: var(--c-ink); }
+.pop__opt small { color: var(--c-ink-3); font-size: var(--t-meta); font-variant-numeric: tabular-nums; }
+.pop__opt mark { background: var(--c-lime); color: var(--c-ink); }
+.pop__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+}
+
+/* Календарь: два месяца, цена под днём, минимум помечен лаймовой линией */
+.cal { display: grid; gap: var(--s-4); }
+@media (min-width: 600px) { .cal { grid-template-columns: 1fr 1fr; } }
+.cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-2);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+}
+.cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal__dow {
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  text-align: center;
+  padding-bottom: var(--s-1);
+}
+.cal__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 42px;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: none;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.cal__day:hover { background: var(--c-surface); }
+.cal__day[disabled] { color: var(--c-ink-4); cursor: default; }
+.cal__day[disabled]:hover { background: none; }
+.cal__day small { font-size: var(--t-nano); color: var(--c-ink-3); }
+.cal__day[data-min="true"] small { color: var(--c-ink); font-weight: var(--fw-medium); }
+.cal__day[data-min="true"]::after {
+  content: "";
+  position: absolute;
+  left: 20%; right: 20%; bottom: 3px;
+  height: 3px;
+  border-radius: var(--r-xs);
+  background: var(--c-lime);
+}
+/* Синий — выбранные даты */
+.cal__day[data-sel="edge"] { background: var(--c-blue); color: var(--c-white); }
+.cal__day[data-sel="edge"] small { color: var(--c-white); }
+.cal__day[data-sel="in"] { background: var(--c-blue-soft); }
+
+/* Счётчик туристов */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: var(--tap-min);
+}
+.stepper__ctrl { display: flex; align-items: center; gap: var(--s-2); }
+.stepper__val { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; font-weight: var(--fw-medium); }
+.stepper__btn {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.stepper__btn:hover { border-color: var(--c-ink); }
+.stepper__btn[disabled] { color: var(--c-ink-4); border-color: var(--c-line); cursor: not-allowed; }
+.stepper__btn svg { width: 16px; height: 16px; }
+
+/* Лаймовая кнопка — единственное целевое действие первого экрана */
+.btn--lime {
+  background: var(--c-lime);
+  color: var(--c-ink);
+  font-weight: var(--fw-bold);
+}
+.btn--lime:hover { background: var(--c-lime-deep); }
+.btn--blue { background: var(--c-blue); color: var(--c-white); }
+.btn--blue:hover { background: var(--c-blue-deep); }
+
+.tag-btn--accent[aria-pressed="true"] {
+  background: var(--c-lime);
+  border-color: var(--c-lime);
+  color: var(--c-ink);
+}
+
+/* ============================================================================
+   5. Секции
+   ========================================================================== */
+
+.section { padding-top: var(--s-24); }
+.section--last { padding-bottom: var(--s-24); }
+.section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-6);
+  margin-bottom: var(--s-8);
+  flex-wrap: wrap;
+}
+.section__head .t-lead { max-width: 56ch; margin-top: var(--s-2); }
+.section__eyebrow { color: var(--c-ink-3); margin-bottom: var(--s-3); }
+.section__tools { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+/* Продолжение списка — под списком: кнопка стоит там, где чтение кончилось */
+.section__more { display: flex; justify-content: center; margin-top: var(--s-8); }
+
+/* Ряд меток, который на десктопе переносится по строкам, а на телефоне
+   листается в одну. Приём общий: и страны над витриной горящих туров,
+   и имена операторов занимали на телефоне по три-четыре строки — блок
+   из одного ряда превращался в стену. */
+.row--slider { margin-bottom: var(--s-5); }
+/* Сам приём описан ниже, у .operators: правило общее для обоих рядов, и
+   стоять оно обязано после объявления .operators — иначе flex-wrap: wrap
+   оттуда перебивает его по порядку каскада. */
+
+/* На телефоне между шапкой секции и содержимым было 40px — на экране,
+   где всё остальное сжато, этот провал читался как пропущенный блок. */
+@media (max-width: 767px) {
+  .section__head { margin-bottom: var(--s-5); }
+  .section__more { margin-top: var(--s-6); }
+}
+
+.link-blue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--tap-min);
+  color: var(--c-blue);
+  font-weight: var(--fw-medium);
+  font-size: var(--t-body-s);
+}
+.link-blue svg { width: 16px; height: 16px; }
+.link-blue:hover { color: var(--c-blue-deep); text-decoration: underline; text-underline-offset: 3px; }
+
+.cards {
+  display: grid;
+  gap: var(--grid-gap);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 600px)  { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1360px) { .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ============================================================================
+   6. Карточка тура: вертикальная (главная) и строкой (выдача)
+   ========================================================================== */
+
+.tour-card__top {
+  position: absolute;
+  inset: var(--s-2) var(--s-2) auto var(--s-2);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+.tour-card__badges { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+/* Нижний угол снимка — вторая срочность: скидка сверху слева, остаток мест
+   снизу слева. Оба знака на фотографии, а тело карточки осталось только
+   товару: место, отель, оценка, факты, цена, кнопки. */
+.tour-card__bottom {
+  position: absolute;
+  inset: auto var(--s-2) var(--s-2) var(--s-2);
+  display: flex;
+  pointer-events: none;
+}
+/* Плашка на снимке — та же капсула, но на белой подложке с размытием:
+   поверх любой фотографии текст должен оставаться читаемым. */
+.tag--onphoto {
+  padding: 5px var(--s-3);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(6px);
+  color: var(--c-ink-body);
+}
+/* Плашки на фото — капсулы: тот же радиус, что у кнопок и чипов, поэтому
+   поверх снимка они читаются как элементы интерфейса, а не как наклейки. */
+.badge-hot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--c-lime);
+  color: var(--c-ink);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Эмодзи крупнее подписи: знак должен читаться раньше числа */
+.badge-hot__sign { font-size: 16px; line-height: 1; }
+.badge-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px var(--s-3);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .92);
+  color: var(--c-ink-body);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+.fav {
+  pointer-events: auto;
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0;
+  border-radius: var(--r-circle);
+  background: rgba(255, 255, 255, .92);
+  color: var(--c-ink);
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.fav:hover { background: var(--c-white); }
+.fav svg { width: 18px; height: 18px; }
+.fav[aria-pressed="true"] { color: var(--c-signal); }
+.fav[aria-pressed="true"] svg { fill: currentColor; }
+
+/* Заглушка вместо снимка: #EAEBED с подписью — DESIGN.md запрещает
+   подменять отсутствующее фото градиентом. */
+.photo-stub {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  background: var(--c-surface-cool);
+  color: var(--c-ink-3);
+  text-align: center;
+  padding: var(--s-3);
+}
+.photo-stub svg { width: 24px; height: 24px; }
+.photo-stub b {
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink-2);
+}
+
+.tour-card__rate,
+.tour-row__rate { display: inline-flex; align-items: center; gap: var(--s-2); }
+.rate-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 24px;
+  padding-inline: var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.rate-word { font-size: var(--t-meta); color: var(--c-ink-2); }
+
+.tour-card__cta { display: flex; gap: var(--s-2); margin-top: var(--s-2); }
+.tour-card__cta .btn { --btn-h: 40px; flex: 1 1 auto; }
+
+.price-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
+.price-note { width: 100%; font-size: var(--t-meta); color: var(--c-ink-2); }
+
+/* Подпись проекта: лаймовая «линия минимума» под самой выгодной ценой.
+   Живёт там, где цены стоят столбцом и сравниваются построчно — календарь дат
+   и таблица номеров. В ленте месяцев её заменила залитая плашка .month--min. */
+.min-mark { position: relative; }
+.min-mark::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -4px;
+  height: 3px;
+  border-radius: var(--r-xs);
+  background: var(--c-lime);
+}
+
+/* --- Карточка строкой --------------------------------------------------- */
+.tour-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  transition: border-color var(--dur-3) var(--ease-out),
+              box-shadow var(--dur-3) var(--ease-out),
+              transform var(--dur-3) var(--ease-out);
+}
+.tour-row:hover, .tour-row.is-active {
+  border-color: var(--c-line-strong);
+  box-shadow: var(--shadow-1);
+  transform: translateY(-2px);
+}
+@media (min-width: 900px) {
+  .tour-row { grid-template-columns: 260px minmax(0, 1fr) 260px; }
+}
+/* На узком экране фото идёт во всю ширину, и 4:3 отдавали ему пол-экрана
+   до того, как покажется хоть одна строка о туре. 16:9 держит ту же роль
+   «это вот такой отель», но пускает содержимое выше. */
+.tour-row__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--c-surface-cool);
+  overflow: hidden;
+}
+/* Фото больше не задаёт высоту строки — её задаёт текст. Раньше min-height 240
+   держал карточку раскрытой даже там, где содержимого на 190. */
+@media (min-width: 900px) { .tour-row__media { aspect-ratio: auto; min-height: 0; } }
+.tour-row__media img { width: 100%; height: 100%; object-fit: cover; }
+.tour-row__dots {
+  position: absolute;
+  left: 0; right: 0; bottom: var(--s-2);
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.tour-row__dots span {
+  width: 5px; height: 5px;
+  border-radius: var(--r-circle);
+  background: rgba(255, 255, 255, .55);
+}
+.tour-row__dots span[data-on="true"] { background: var(--c-white); }
+.tour-row__count {
+  position: absolute;
+  left: var(--s-2); bottom: var(--s-2);
+  padding: 3px var(--s-2);
+  border-radius: var(--r-pill);
+  background: rgba(0, 0, 0, .55);
+  color: var(--c-white);
+  font-size: var(--t-nano);
+  font-variant-numeric: tabular-nums;
+}
+.tour-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--c-line);
+}
+@media (min-width: 900px) {
+  .tour-row__body { border-bottom: 0; border-right: 1px solid var(--c-line); }
+}
+.tour-row__name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+.tour-row__place { font-size: var(--t-body-s); color: var(--c-ink-2); }
+/* Две колонки: даты/ночи, вылет/номер, питание/пляж — пары, а не поток */
+.tour-row__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px var(--s-3);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-body);
+  font-variant-numeric: tabular-nums;
+}
+.tour-row__facts b { font-weight: var(--fw-medium); }
+.tour-row__svc { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); color: var(--c-ink-3); }
+.tour-row__svc svg { width: 17px; height: 17px; }
+.tour-row__marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: auto;
+}
+
+.tour-row__price {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+}
+.tour-row__price .btn { --btn-h: 40px; margin-top: var(--s-1); }
+/* В узкой колонке цена занимала три строки: перенос по flex ставил сумму,
+   старую цену, процент и «за двоих» друг под друга как придётся. Здесь это
+   фиксированная сетка 2×2 — сумма и «за двоих» сверху, старая цена и процент
+   под ними, — поэтому блок всегда ровно две строки, а не сколько получится. */
+.tour-row__price .price-line {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: baseline;
+  column-gap: var(--s-2);
+  row-gap: 2px;
+}
+.tour-row__price .price-line > span[itemprop="offers"] { display: contents; }
+.tour-row__price .t-price { grid-area: 1 / 1; }
+.tour-row__price .price-note { grid-area: 1 / 2; width: auto; }
+.tour-row__price .t-price--old { grid-area: 2 / 1; }
+/* Процент стоит рядом с зачёркнутой ценой — и по кеглю равен ей, а не выше:
+   полноразмерная плашка рядом со строчкой в 20 px читалась как отдельный
+   элемент, хотя это подпись к той же старой цене. */
+.tour-row__price .price-line .tag { grid-area: 2 / 2; padding: 1px var(--s-2); font-size: var(--t-nano); }
+/* Второстепенные действия в одну строку под кнопкой покупки. Обе подписи —
+   в одну строчку каждая: перенос «Ещё варианты дат и питания» пополам делал
+   из двух ссылок визуальный абзац. */
+.tour-row__links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--t-meta);
+  white-space: nowrap;
+}
+.tour-row__links .link-btn,
+.tour-row__links .disclose { font-size: inherit; min-height: 28px; }
+.link-btn {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-body-s);
+  color: var(--c-blue);
+  cursor: pointer;
+}
+.link-btn:hover { text-decoration: underline; }
+.tour-row__op {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+}
+.installment {
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.disclose {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  color: var(--c-blue);
+  cursor: pointer;
+}
+.disclose svg { width: 14px; height: 14px; transition: transform var(--dur-2) var(--ease-in-out); }
+.disclose[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.alt-table {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--c-line);
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-page);
+  overflow-x: auto;
+}
+.alt-table table { width: 100%; border-collapse: collapse; font-size: var(--t-body-s); }
+.alt-table th {
+  text-align: left;
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  font-weight: var(--fw-medium);
+  padding-bottom: var(--s-1);
+  white-space: nowrap;
+}
+.alt-table td {
+  padding: var(--s-2) var(--s-3) var(--s-2) 0;
+  border-top: 1px solid var(--c-line);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.alt-table td:last-child, .alt-table th:last-child { padding-right: 0; text-align: right; }
+
+/* ============================================================================
+   7. Плитки направлений
+   ========================================================================== */
+
+/* Высота задаётся рядом, а не пропорцией каждой плитки: широкая и узкая
+   в одном ряду обязаны заканчиваться на одной линии, иначе ряд рвётся. */
+.tiles { display: grid; gap: var(--grid-gap); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px)  { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 300px; } }
+@media (min-width: 1120px) { .tiles { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: 340px; } }
+@media (min-width: 1530px) { .tiles { grid-auto-rows: 380px; } }
+
+.tile {
+  position: relative;
+  display: block;
+  grid-column: span 1;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+  aspect-ratio: 3 / 4;
+  color: var(--c-white);
+}
+@media (min-width: 768px)  { .tile { grid-column: span 3; aspect-ratio: auto; height: 100%; } }
+@media (min-width: 768px)  { .tile--wide { grid-column: span 6; } }
+.tile img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-5) var(--ease-out);
+}
+.tile:hover img { transform: scale(1.03); }
+.tile__scrim { position: absolute; inset: 0; background: var(--c-scrim-grad); }
+.tile__body {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4);
+}
+.tile__name { font-size: var(--t-h5); font-weight: var(--fw-medium); }
+.tile__price { font-size: var(--t-h6); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.tile__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+  font-size: var(--t-meta);
+  color: rgba(255, 255, 255, .85);
+  font-variant-numeric: tabular-nums;
+}
+.tile__meta svg { width: 14px; height: 14px; vertical-align: -2px; }
+.tile__visa {
+  align-self: flex-start;
+  margin-top: var(--s-1);
+  padding: 4px var(--s-3);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .3);
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+}
+/* Плитка без снимка живёт на холодной поверхности с чернильным текстом */
+.tile--stub { background: var(--c-surface-cool); color: var(--c-ink); }
+.tile--stub .tile__meta { color: var(--c-ink-2); }
+.tile--stub .tile__visa { background: var(--c-white); border-color: var(--c-line); color: var(--c-ink-2); }
+
+/* Последняя плитка ряда — выход в полную выдачу. Чёрная, без снимка:
+   это не направление, а действие, и путать их нельзя. */
+/* Текст и стрелка стоят вместе у нижнего края: строкой в ряд стрелка съедала
+   у узкой плитки треть ширины и заголовок ломался на четыре строки, а
+   space-between отбрасывал её в пустой верх. */
+.tile--all {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  background: var(--c-inverse-bg);
+  color: var(--c-inverse-ink);
+}
+.tile--all__text { min-width: 0; }
+.tile--all:hover .tile__go { background: var(--c-lime); color: var(--c-ink); border-color: var(--c-lime); }
+.tile--all .tile__name { font-size: var(--t-h4); }
+.tile--all .tile__note { font-size: var(--t-body-s); color: var(--c-inverse-ink-2); margin-top: var(--s-2); }
+.tile__go {
+  flex: none;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px; height: 48px;
+  border-radius: var(--r-circle);
+  border: 1px solid var(--c-inverse-line);
+  transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.tile__go svg { width: 22px; height: 22px; }
+
+/* ============================================================================
+   8. Лента месяцев — «когда дешевле»
+   ========================================================================== */
+
+.months {
+  display: flex;
+  gap: var(--s-2);
+  overflow-x: auto;
+  padding-bottom: var(--s-2);
+  scrollbar-width: thin;
+}
+.month {
+  flex: 1 0 140px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4) var(--s-3) var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+.month:hover { border-color: var(--c-ink); }
+.month__name { font-size: var(--t-body-s); color: var(--c-ink-2); }
+.month__price {
+  font-size: var(--t-h5);
+  font-weight: var(--fw-bold);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.month__note {
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  min-height: 12px;
+}
+/* Месяц с минимальной ценой — залитая плашка, а не линия под ценой:
+   в ленте из шести карточек трёхпиксельная черта терялась и читалась как
+   подчёркивание ссылки. Пятно лайма на экране по-прежнему одно. */
+.month--min {
+  background: var(--c-lime);
+  border-color: var(--c-lime);
+}
+.month--min .month__name,
+.month--min .month__price,
+.month--min .month__note { color: var(--c-ink); }
+.month--min:hover { border-color: var(--c-ink); }
+
+/* ============================================================================
+   9. Подборки, преимущества, шаги, операторы, отзывы, статьи
+   ========================================================================== */
+
+.coll-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  background: var(--c-white);
+  transition: border-color var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+}
+.coll-card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
+/* 16/9 вместо 4/3 — снимок ниже на четверть, и карточка перестаёт быть
+   колонкой. Пропорция не выдумана: её уже носит снимок статьи. */
+.coll-card__media { position: relative; aspect-ratio: 16 / 9; background: var(--c-surface-cool); overflow: hidden; }
+.coll-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-5) var(--ease-out); }
+.coll-card:hover .coll-card__media img { transform: scale(1.03); }
+/* Стрелка ушла со снимка вниз, к тексту: на фотографии она закрывала кадр и
+   спорила с плашками карточек тура, а в строке с заголовком читается как
+   окончание фразы — «подборка → выдача». */
+.coll-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-5);
+}
+.coll-card__text { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
+.coll-card__body h3 { letter-spacing: var(--ls-text); }
+.coll-card__go {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  color: var(--c-ink);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+.coll-card__go svg { width: 20px; height: 20px; }
+.coll-card:hover .coll-card__go {
+  background: var(--c-lime);
+  border-color: var(--c-lime);
+  transform: translate(2px, -2px);
+}
+
+.why { display: grid; gap: var(--s-6); grid-template-columns: 1fr; }
+@media (min-width: 600px)  { .why { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1120px) { .why { grid-template-columns: repeat(3, 1fr); } }
+.why__item { display: flex; flex-direction: column; gap: var(--s-2); }
+.why__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px; height: 48px;
+  border-radius: var(--r-circle);
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+.why__icon svg { width: 22px; height: 22px; }
+
+.steps { display: grid; gap: var(--s-6); grid-template-columns: 1fr; counter-reset: step; }
+@media (min-width: 600px)  { .steps { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1120px) { .steps { grid-template-columns: repeat(4, 1fr); } }
+.step { display: flex; flex-direction: column; gap: var(--s-2); padding-top: var(--s-4); border-top: 1px solid var(--c-line); }
+.step__num {
+  font-size: var(--t-h3);
+  font-weight: var(--fw-light);
+  letter-spacing: var(--ls-display);
+  color: var(--c-cool);
+  font-variant-numeric: tabular-nums;
+}
+
+.operators { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.operator {
+  display: inline-flex;
+  align-items: center;
+  min-height: 56px;
+  padding-inline: var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  /* Имена операторов — источник цен, а не водяной знак: серым #B3B3B3 они
+     выглядели выключенными и подрывали доверие к самой строчке «цены
+     собираются из предложений этих операторов». */
+  color: var(--c-ink);
+  font-size: var(--t-body);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+  transition: color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+}
+.operator:hover { border-color: var(--c-ink); }
+
+/* Ряд меток, который на десктопе переносится по строкам, а на телефоне
+   листается в одну. Приём общий для стран над витриной горящих туров и для
+   имён операторов: и те и другие занимали на телефоне по три-четыре строки,
+   и ряд превращался в стену. */
+@media (max-width: 767px) {
+  .row--slider,
+  .operators {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Ряд вылезает за поля контейнера и листается от края до края: иначе
+       последняя видимая метка обрезается ровно по полю и читается как
+       ошибка вёрстки, а не как продолжение ряда. */
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+  .row--slider { margin-bottom: var(--s-3); }
+  .row--slider::-webkit-scrollbar,
+  .operators::-webkit-scrollbar { display: none; }
+  .row--slider > *,
+  .operators > * { flex: none; }
+}
+
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 1fr);
+  gap: var(--grid-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+/* Нижняя граница трека обязана быть больше нуля: иначе карусель ужимает
+   карточки по числу элементов вместо того, чтобы прокручиваться. */
+@media (min-width: 1024px) {
+  .rail { grid-auto-columns: minmax(340px, calc((100% - var(--grid-gap) * 2) / 3)); }
+}
+.rail > * { scroll-snap-align: start; }
+
+/* Стрелки карусели: та же круглая кнопка, что и в шапке, только у края ленты.
+   Появляются, когда прокручивать есть что, — иначе это ложное обещание. */
+.rail-nav { display: flex; gap: var(--s-2); }
+.rail-nav button[disabled] { color: var(--c-ink-4); border-color: var(--c-line); cursor: default; }
+
+/* ============================================================================
+   9а. Итог по отзывам: рейтинг, счётчики и внешние площадки
+   ========================================================================== */
+
+/* Здесь живут две раскладки одного блока, и это сделано намеренно.
+
+   ДО 1024 (телефон и планшет) — два яруса: сверху оценка компании во всю
+   ширину, снизу площадки, разделённые линиями. Четырьмя колонками на узком
+   экране итог компании стоял первым из четырёх одинаковых столбиков и ничем
+   не отличался от площадки; звёзды дробные, потому что 4,9 должно читаться
+   как 4,9, а не как пять звёзд.
+
+   ОТ 1024 — прежняя десктопная раскладка, вернувшаяся без изменений: слева
+   столбец с оценкой, отделённый линией, справа площадки плитками. На широкой
+   строке она работала, и трогать её не просили.
+
+   Разметка у обеих одна: различаются только раскладка и то, что показано —
+   звёзды у площадок нужны узкой колонке, «/ 5» цифрой — широкой. */
+.rev-summary {
+  margin-bottom: var(--s-8);
+  padding: var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-white);
+}
+@media (min-width: 768px)  { .rev-summary { padding: var(--s-6) var(--s-8); } }
+/* От 1360 сетка карточек отзывов под сводкой становится четырёхколоночной —
+   и сводка встаёт в тот же счёт: оценка компании и три площадки, четыре
+   равные ячейки в одну строку, разделённые вертикальными линиями. Плиток
+   с рамкой у площадок нет: рамка внутри рамки дробила панель на предметы,
+   а это один объект — итог доверия. */
+@media (min-width: 1360px) {
+  .rev-summary {
+    display: grid;
+    /* Ровно та же сетка, что у .reviews-grid ниже, — те же четыре трека и тот
+       же промежуток. Поэтому горизонтальных полей у панели нет: они сдвинули бы
+       треки, и вертикальные линии разъехались бы с промежутками между
+       карточками. Отступ от рамки даёт каждая ячейка сама. */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--grid-gap);
+    align-items: stretch;
+    padding: var(--s-6) 0;
+  }
+}
+
+/* --- Верхний ярус: оценка компании ---------------------------------------- */
+.rev-score {
+  display: grid;
+  gap: var(--s-3);
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--c-line);
+}
+.rev-score__label { color: var(--c-ink-3); }
+.rev-score__main { display: flex; align-items: center; gap: var(--s-4); }
+.rev-score__row { display: flex; align-items: baseline; gap: var(--s-2); }
+.rev-score__value {
+  font-size: var(--t-h1);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-display);
+}
+.rev-score__max { font-size: var(--t-h5); color: var(--c-ink-3); font-variant-numeric: tabular-nums; }
+.rev-score__counts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+.rev-score__counts b { font-weight: var(--fw-medium); color: var(--c-ink); font-variant-numeric: tabular-nums; }
+
+/* От планшета ярус разворачивается по горизонтали: слева оценка компании
+   в две строки — подпись и под ней число со звёздами, справа, у самого края
+   панели, — счётчики. Столбиком из четырёх строк подряд итог компании читался
+   как ещё одна площадка. */
+@media (min-width: 768px) {
+  .rev-score {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--s-8);
+    row-gap: var(--s-2);
+    padding-bottom: var(--s-6);
+  }
+  .rev-score__label { grid-column: 1; grid-row: 1; }
+  .rev-score__main  { grid-column: 1; grid-row: 2; }
+  .rev-score__counts {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+/* От 1360 оценка компании — первая из четырёх ячеек строки: подпись, число
+   со звёздами и счётчики идут сверху вниз, линия под ярусом не нужна —
+   её работу делают вертикальные линии между ячейками. */
+@media (min-width: 1360px) {
+  .rev-score {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--s-2);
+    /* Текст начинается там же, где текст в карточке отзыва под ней */
+    padding: 0 var(--s-4) 0 var(--s-5);
+    border-bottom: 0;
+  }
+  .rev-score__main { flex-direction: column; align-items: flex-start; gap: var(--s-2); }
+  .rev-score__counts {
+    flex-direction: column;
+    gap: var(--s-1);
+    text-align: left;
+  }
+}
+
+/* Дробная звёздная шкала: серый ряд снизу, тёплый — сверху, обрезан по --fill */
+.stars-frac { position: relative; display: inline-flex; align-self: center; }
+.stars-frac__base,
+.stars-frac__on { display: flex; gap: 2px; }
+.stars-frac__base { color: var(--c-line-strong); }
+.stars-frac__on {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--fill, 100%);
+  overflow: hidden;
+  color: var(--c-warm-deep);
+}
+.stars-frac svg { flex: none; width: 16px; height: 16px; }
+.rev-score .stars-frac svg { width: 18px; height: 18px; }
+
+/* --- Нижний ярус: площадки ------------------------------------------------ */
+.rev-plats { display: grid; gap: var(--s-4); padding-top: var(--s-5); }
+/* До 1024 площадки идут списком: тремя колонками имя площадки, оценка и
+   звёзды не помещались в трек и «Google Maps» обрезался в «Google M…». */
+@media (max-width: 1023.98px) {
+  .rev-plat + .rev-plat { padding-top: var(--s-4); border-top: 1px solid var(--c-line); }
+}
+/* 1024–1359: сетка карточек отзывов под сводкой трёхколоночная — площадки
+   встают в те же три колонки, с тем же промежутком и с линиями посередине
+   промежутков. Оценка компании остаётся ярусом над ними, во всю ширину. */
+@media (min-width: 1024px) {
+  .rev-summary { padding-inline: 0; }
+  .rev-score { padding-inline: var(--s-5); }
+  .rev-plats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--grid-gap);
+    padding-top: var(--s-6);
+  }
+  .rev-plat { padding-inline: var(--s-5) var(--s-4); }
+  .rev-plat + .rev-plat {
+    margin-left: calc(var(--grid-gap) / -2);
+    padding-left: calc(var(--grid-gap) / 2 + var(--s-5));
+    border-left: 1px solid var(--c-line);
+  }
+}
+/* От 1360 площадки — ячейки общей четырёхколоночной сетки сводки, поэтому
+   собственная сетка списка растворяется (display: contents). Линия стоит слева
+   у каждой, включая первую: она отделяет площадки от оценки компании. Отрица-
+   тельный отступ уводит линию на половину промежутка влево — она встаёт ровно
+   посередине зазора между карточками отзывов, а не по краю колонки. */
+@media (min-width: 1360px) {
+  .rev-plats { display: contents; }
+  .rev-plat {
+    margin-left: calc(var(--grid-gap) / -2);
+    padding-left: calc(var(--grid-gap) / 2 + var(--s-5));
+    padding-right: var(--s-4);
+    border-left: 1px solid var(--c-line);
+  }
+}
+
+/* Площадка: имя слева, оценка у правого края своей колонки, число отзывов
+   строкой ниже — вместо столбика, жавшегося к левому краю. */
+.rev-plat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.rev-plat__head { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.rev-plat__mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: var(--r-circle);
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--t-body);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-none);
+  line-height: 1;
+}
+.rev-plat__name { font-size: var(--t-body); font-weight: var(--fw-medium); }
+.rev-plat__row {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  justify-self: end;
+}
+/* Без подложки оценку держит только кегль — он и вырос до заголовочного */
+.rev-plat__val {
+  font-size: var(--t-h4);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: tabular-nums;
+}
+.rev-plat .stars-frac svg { width: 16px; height: 16px; }
+.rev-plat__n {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* От 1360 у площадки та же вертикаль, что у оценки компании слева: имя со
+   знаком, под ним оценка со звёздами, ниже число отзывов. Одинаковый строй
+   всех четырёх ячеек и держит строку. */
+@media (min-width: 1360px) {
+  .rev-plat {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    align-items: start;
+    gap: var(--s-2);
+  }
+  .rev-plat__row { grid-column: 1; grid-row: 2; justify-self: start; }
+  .rev-plat__n { grid-column: 1; grid-row: 3; }
+}
+
+/* Отзывы — сетка вниз, а не карусель: их читают подряд, а не листают */
+.reviews-grid { display: grid; gap: var(--grid-gap); grid-template-columns: 1fr; }
+/* На телефоне отзывы идут в один столбик, и все девять — это девять экранов
+   подряд ещё до того, как страница продолжится. Пяти хватает, чтобы понять
+   интонацию; за остальными есть кнопка «Все отзывы» сразу под ними. */
+@media (max-width: 599.98px) { .reviews-grid > :nth-child(n+6) { display: none; } }
+@media (min-width: 600px)  { .reviews-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .reviews-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1360px) { .reviews-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+}
+.review__who { display: flex; align-items: center; gap: var(--s-3); }
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border-radius: var(--r-circle);
+  background: var(--c-surface-cool);
+  color: var(--c-ink-2);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+}
+.review__body { display: flex; flex-direction: column; gap: var(--s-2); }
+.review__text { color: var(--c-ink-body); }
+/* Текст занимает ровно пять строк у всех карточек: короткий отзыв добирает
+   высоту пустотой, длинный обрезается и открывается кнопкой. Из-за этого
+   отель и «полезно» стоят на одной линии во всём ряду, а ряд не растягивается
+   по самому болтливому туристу. Кнопку ставит JS только там, где текст
+   действительно обрезан. */
+/* Добор высоты нужен там, где карточки стоят рядом и их низ должен совпадать.
+   В один столбец на телефоне это была бы пустота ради пустоты. */
+@media (min-width: 600px) {
+  .review__text { min-height: calc(5 * var(--lh-body) * 1em); }
+}
+.review:not(.is-open) .review__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.review__more {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-blue);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.review__more:hover { color: var(--c-blue-deep); text-decoration: underline; text-underline-offset: 3px; }
+
+.review__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: auto;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+}
+.review__hotel { font-size: var(--t-meta); color: var(--c-ink-2); min-width: 0; }
+/* «Полезно» — тихая отметка, а не второе целевое действие карточки */
+.review__like {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding-inline: var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  color: var(--c-ink-2);
+  font-size: var(--t-meta);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
+}
+.review__like svg { width: 16px; height: 16px; }
+.review__like:hover { border-color: var(--c-ink); color: var(--c-ink); }
+.review__like[aria-pressed="true"] {
+  background: var(--c-blue-soft);
+  border-color: var(--c-blue);
+  color: var(--c-blue);
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.article__media { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r-xl); overflow: hidden; background: var(--c-surface-cool); }
+.article__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-5) var(--ease-out); }
+.article:hover .article__media img { transform: scale(1.03); }
+/* На снимке лежит только рубрика: она называет кадр. Время чтения ушло
+   в строку с датой — это свойство текста, а не подпись к фотографии, и на
+   белой плашке поверх снимка оно спорило с рубрикой за один и тот же взгляд. */
+.article__tags {
+  position: absolute;
+  left: var(--s-3); top: var(--s-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+.article__tag {
+  padding: 5px var(--s-3);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .92);
+  color: var(--c-ink);
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  font-weight: var(--fw-medium);
+}
+/* Дата и время чтения — одна строка выходных данных: точка между ними
+   отделяет «когда написано» от «сколько читать», не заводя второй цвет. */
+.article__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.article__dot {
+  flex: none;
+  width: 3px; height: 3px;
+  border-radius: var(--r-circle);
+  background: currentColor;
+  opacity: .6;
+}
+.article__excerpt { color: var(--c-ink-2); }
+.article__read { display: inline-flex; align-items: center; gap: var(--s-2); margin-top: auto; color: var(--c-blue); font-size: var(--t-body-s); font-weight: var(--fw-medium); }
+.article__read svg { width: 16px; height: 16px; }
+.article:hover .article__read { color: var(--c-blue-deep); }
+
+/* ============================================================================
+   10. Подписка, оплата, SEO-блок, футер
+   ========================================================================== */
+
+/* Подписка перешла с холодной серой плашки на чёрную: серый блок между белыми
+   секциями читался как незагруженная картинка, а форма в нём — как анкета
+   (метка, поле, чекбокс, кнопка отдельной строкой). Здесь чёрное поле,
+   одна строка «почта + кнопка» и согласие мелким шрифтом под ней. */
+.subscribe {
+  display: grid;
+  gap: var(--s-6);
+  padding: var(--s-8) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--c-inverse-bg);
+  color: var(--c-inverse-ink);
+}
+@media (min-width: 1024px) {
+  .subscribe {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+    align-items: center;
+    padding: var(--s-12);
+    gap: var(--s-12);
+  }
+}
+.subscribe__eyebrow { display: block; margin-bottom: var(--s-3); color: var(--c-lime); }
+.subscribe__text p { margin-top: var(--s-3); color: var(--c-inverse-ink-2); }
+.subscribe__form { display: flex; flex-direction: column; gap: var(--s-3); }
+.subscribe__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-1) var(--s-1) var(--s-5);
+  border: 1px solid var(--c-inverse-line);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .06);
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+.subscribe__row:focus-within { border-color: var(--c-inverse-ink); }
+.subscribe__row .field__input {
+  padding-block: var(--s-2);
+  color: var(--c-inverse-ink);
+}
+.subscribe__row .field__input::placeholder { color: var(--c-inverse-ink-2); }
+.subscribe__row .btn { flex: none; --btn-h: 44px; }
+.subscribe .field__hint { color: var(--c-inverse-ink-2); }
+.subscribe .check { min-height: auto; color: var(--c-inverse-ink-2); }
+.subscribe .check__box { background: transparent; border-color: var(--c-inverse-line); }
+.subscribe .check input:checked + .check__box { background: var(--c-lime); border-color: var(--c-lime); color: var(--c-ink); }
+.subscribe .check input:focus-visible + .check__box { outline-color: var(--c-inverse-ink); }
+.field--error .subscribe__row { border-color: var(--c-signal); }
+/* На узком экране кнопка не влезает в строку с полем — она уходит под него */
+@media (max-width: 599px) {
+  .subscribe__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    border-radius: var(--r-l);
+  }
+  .subscribe__row .field__input { padding-block: 0; }
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-height: var(--tap-min);
+  cursor: pointer;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+.check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.check__box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  margin-top: 2px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-xs);
+  background: var(--c-white);
+  color: var(--c-white);
+  transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.check__box svg { width: 14px; height: 14px; opacity: 0; }
+.check input:checked + .check__box { background: var(--c-ink); border-color: var(--c-ink); }
+.check input:checked + .check__box svg { opacity: 1; }
+.check input:focus-visible + .check__box { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+.check--err .check__box { border-color: var(--c-signal); }
+
+.pay-grid { display: grid; gap: var(--s-3); grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 768px)  { .pay-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1120px) { .pay-grid { grid-template-columns: repeat(6, 1fr); } }
+.pay-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+  min-height: 110px;
+}
+.pay-tile svg { width: 22px; height: 22px; color: var(--c-ink-2); }
+.pay-tile b { font-size: var(--t-body-s); font-weight: var(--fw-medium); color: var(--c-ink); }
+.pay-tile span { font-size: var(--t-meta); color: var(--c-ink-2); }
+
+/* SEO-текст и заявка. Плашка липнет к тексту и едет вместе с ним: длинный
+   текст читают долго, и действие должно оставаться в поле зрения. */
+.seo-layout { display: grid; gap: var(--s-8); }
+@media (min-width: 1024px) {
+  .seo-layout { grid-template-columns: minmax(0, 1fr) 380px; gap: var(--s-12); align-items: start; }
+}
+/* Текст занимает всю колонку: 68ch оставляли между статьёй и плашкой пустоту
+   в треть экрана, и блок разваливался на две несвязанные половины. */
+.seo-layout .t-long { max-width: none; }
+.promo-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-6);
+  border-radius: var(--r-xl);
+  background: var(--c-inverse-bg);
+  color: var(--c-inverse-ink);
+}
+@media (min-width: 1024px) {
+  .promo-aside { position: sticky; top: calc(var(--header-h) + var(--s-4)); }
+}
+.promo-aside__mark {
+  font-size: var(--t-nano);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  font-weight: var(--fw-medium);
+  color: var(--c-inverse-ink);
+}
+.promo-aside h3 { font-size: var(--t-h4); font-weight: var(--fw-medium); letter-spacing: var(--ls-display); }
+.promo-aside p { font-size: var(--t-body-s); color: var(--c-inverse-ink-2); }
+.promo-aside .btn { --btn-h: 52px; }
+
+/* Один столбик на телефоне: в двух колонках по 150 px «Туры в Турцию из
+   Караганды» ломалось на три строки и список превращался в кашу. */
+.seo-links { display: grid; gap: var(--s-6); grid-template-columns: 1fr; }
+.seo-links__more { display: none; margin-top: var(--s-6); }
+@media (max-width: 767.98px) {
+  .seo-links__more { display: block; }
+  .seo-links > :nth-child(n+4) { display: none; }
+  .seo-links.is-open > * { display: block; }
+}
+@media (min-width: 600px)  { .seo-links { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 768px)  { .seo-links { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1120px) { .seo-links { grid-template-columns: repeat(5, 1fr); } }
+.seo-links h3 {
+  margin-bottom: var(--s-2);
+  font-size: var(--t-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+.seo-links a {
+  display: block;
+  min-height: 30px;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+.seo-links a:hover { color: var(--c-blue); }
+
+.site-footer { padding-top: var(--s-24); }
+.site-footer__panel {
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  background: var(--c-inverse-bg);
+  color: var(--c-inverse-ink);
+  padding: var(--s-12) var(--s-5) var(--s-8);
+}
+.site-footer__head {
+  max-width: 46ch;
+  padding-bottom: var(--s-8);
+  margin-bottom: var(--s-8);
+  border-bottom: 1px solid var(--c-inverse-line);
+}
+/* Цвет задаётся явно: классы .t-h* прописывают тёмный --c-ink, и на чёрной
+   панели заголовок оказывался невидимым */
+.site-footer__head h2 { color: var(--c-inverse-ink); }
+.site-footer__head p { margin-top: var(--s-3); color: var(--c-inverse-ink-2); }
+@media (min-width: 1024px) { .site-footer__panel { padding: var(--s-16) var(--s-12) var(--s-8); } }
+.site-footer h3 {
+  margin-bottom: var(--s-3);
+  font-size: var(--t-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-inverse-ink-2);
+}
+.site-footer li a, .site-footer address a {
+  display: block;
+  min-height: 30px;
+  font-size: var(--t-body-s);
+  color: var(--c-inverse-ink);
+}
+.site-footer__legal {
+  margin-top: var(--s-8);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--c-inverse-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+  justify-content: space-between;
+  font-size: var(--t-meta);
+  color: var(--c-inverse-ink-2);
+}
+
+/* ============================================================================
+   11. Модальное окно: отзыв и заявка
+   Одна реализация на оба сценария — форма внутри собрана из тех же полей,
+   что и поиск, чтобы ввод выглядел одинаково по всему сайту.
+   ========================================================================== */
+
+/* Страница под окном и под картой сайта не должна прокручиваться */
+html.is-locked, html.is-locked body { overflow: hidden; }
+
+/* Пока страница заблокирована, корень получает overflow: hidden — и шапка
+   перестаёт прилипать: у position: sticky не остаётся прокручиваемого
+   предка, и она уезжает на своё место в потоке, в самое начало страницы.
+   Меню при этом оставляет над собой проём ровно в высоту шапки, и в этом
+   проёме была видна прокрученная страница: кусок фотографии или карточки
+   вместо шапки. На время блокировки шапка становится fixed — координаты
+   те же, что у прилипшей, поэтому визуально ничего не сдвигается. */
+html.is-locked .site-header {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+@media (min-width: 768px) { .modal { align-items: center; padding: var(--s-6); } }
+.modal__scrim { position: absolute; inset: 0; background: var(--c-scrim); }
+.modal__card {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: var(--s-6);
+  background: var(--c-page);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--shadow-2);
+  animation: modal-in var(--dur-4) var(--ease-out);
+}
+@media (min-width: 768px) { .modal__card { padding: var(--s-8); border-radius: var(--r-xl); } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(18px); } }
+@media (prefers-reduced-motion: reduce) { .modal__card { animation: none; } }
+.modal__x { position: absolute; top: var(--s-4); right: var(--s-4); }
+.modal__head { display: flex; flex-direction: column; gap: var(--s-2); padding-right: var(--s-12); margin-bottom: var(--s-5); }
+.modal__form { display: flex; flex-direction: column; gap: var(--s-4); }
+.modal__row { display: grid; gap: var(--s-4); }
+@media (min-width: 600px) { .modal__row { grid-template-columns: 1fr 1fr; } }
+.modal__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+
+/* Оценка: пять кнопок — шкала отзывов и рейтинга компании пятибалльная,
+   и форма обязана говорить на том же языке. */
+.rate-picker { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.rate-picker button {
+  width: 44px; height: 44px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  font-size: var(--t-body-s);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
+}
+.rate-picker button:hover { border-color: var(--c-ink); color: var(--c-ink); }
+.rate-picker button[aria-pressed="true"] { background: var(--c-ink); border-color: var(--c-ink); color: var(--c-white); }
+.field__control--area { align-items: stretch; padding: 0; }
+.field__control--area textarea.field__input { min-height: 120px; padding: var(--s-3); resize: vertical; font-family: inherit; line-height: var(--lh-body); }
+
+/* ============================================================================
+   12. Плашка города, тосты
+   ========================================================================== */
+
+.city-prompt {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  z-index: var(--z-overlay);
+  display: none;
+  gap: var(--s-3);
+  max-width: 360px;
+  padding: var(--s-4);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  box-shadow: var(--shadow-2);
+}
+.city-prompt[data-open="true"] { display: grid; }
+.city-prompt__row { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: var(--s-6);
+  transform: translateX(-50%);
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: center;
+  pointer-events: none;
+}
+.toast {
+  padding: var(--s-2) var(--s-5);
+  border-radius: var(--r-pill);
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--t-body-s);
+  box-shadow: var(--shadow-2);
+  animation: toast-in var(--dur-4) var(--ease-out);
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+/* ============================================================================
+   12. Страница выдачи
+   ========================================================================== */
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+}
+.crumbs a:hover { color: var(--c-ink); }
+
+/* Заголовок и хлебные крошки уехали из липкой полосы в обычный поток: в выдаче
+   их читают один раз на входе, а держать их прибитыми к верху экрана — значит
+   отдавать им высоту постоянно. Липкой осталась только строка условий. */
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-block: var(--s-3) var(--s-3);
+}
+
+.searchbar {
+  position: sticky;
+  top: var(--header-h-compact);
+  z-index: var(--z-sticky);
+  background: color-mix(in srgb, var(--c-page) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--c-line);
+  border-bottom: 1px solid var(--c-line);
+}
+/* Одна строка вместо четырёх: условия, счётчик опроса и «Изменить» в ряд.
+   На узком экране счётчик уходит — условия важнее статуса опроса. */
+.searchbar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+}
+.searchbar__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+.searchbar__summary b {
+  color: var(--c-ink);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+}
+.searchbar__full { display: none; padding-bottom: var(--s-4); }
+.searchbar[data-expanded="true"] .searchbar__full { display: block; }
+
+/* Опрос операторов: текстом — в строку условий, полосой — по нижней кромке
+   всей липкой шапки. Так статус виден, но собственной высоты не занимает. */
+.progress {
+  display: flex;
+  align-items: center;
+  flex: none;
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+.progress[hidden] { display: none; }
+.progress__track {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+}
+.searchbar .container { position: relative; }
+/* Полоса растёт масштабом, а не шириной: ширина заставляла бы браузер
+   пересчитывать раскладку на каждом шаге опроса. */
+.progress__bar {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: var(--c-lime);
+  transition: transform var(--dur-4) var(--ease-out);
+}
+.progress__count { font-variant-numeric: tabular-nums; color: var(--c-ink); font-weight: var(--fw-medium); white-space: nowrap; }
+@media (max-width: 767.98px) { .progress__count { display: none; } }
+
+.layout { display: grid; gap: var(--s-6); align-items: start; }
+@media (min-width: 1024px) {
+  .layout { grid-template-columns: var(--filters-w) minmax(0, 1fr); gap: var(--s-8); }
+}
+
+.sortbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--c-line);
+  margin-bottom: var(--s-4);
+}
+.sortbar__count {
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+/* Своя стрелка вместо системной. Системная рисуется вплотную к правому краю
+   поля и не подчиняется padding: между знаком и рамкой оставалось 3–4px,
+   тогда как слева текст отступал на 15. Здесь это тот же chev-d, что и в
+   остальных полях, и он стоит на своих 15px от края. */
+.select {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 calc(var(--s-3) + 18px) 0 var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);
+  background: var(--c-white);
+  font-size: var(--t-body-s);
+  color: var(--c-ink);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234D4D4D' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 9.5 7 7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s-3) center;
+  background-size: 16px 16px;
+}
+.select:hover { border-color: var(--c-line-strong); }
+
+.chips-active { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.chip-x {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  font-size: var(--t-meta);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.chip-x:hover { border-color: var(--c-ink); }
+.chip-x svg { width: 14px; height: 14px; color: var(--c-ink-3); }
+
+/* --- Фильтры ------------------------------------------------------------ */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+  padding: var(--s-3) var(--s-4);
+}
+/* Панель фильтров едет вместе со страницей и не имеет своей полосы прокрутки:
+   вложенный скролл прятал половину условий и заставлял искать их вслепую —
+   все значения должны быть видны сразу, целиком, как список. */
+.fgroup { border-bottom: 1px solid var(--c-line); }
+.fgroup:last-child { border-bottom: 0; }
+.fgroup > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: 44px;
+  cursor: pointer;
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink);
+  list-style: none;
+}
+.fgroup > summary::-webkit-details-marker { display: none; }
+.fgroup > summary svg { width: 16px; height: 16px; color: var(--c-ink-3); transition: transform var(--dur-2) var(--ease-in-out); }
+.fgroup[open] > summary svg { transform: rotate(180deg); }
+/* Строки списка идут вплотную — их разделяет собственная высота строки, а не
+   зазор. Общий gap здесь добавлял 10 px между каждой парой значений, из-за чего
+   «Класс отеля» шёл заметно реже, чем список курортов: там строки лежат внутри
+   одной обёртки и до них gap не доставал. Отступ остался только у тех блоков,
+   которые списком не являются, — поля бюджета и строка поиска по списку. */
+.fgroup__body { padding-bottom: var(--s-3); display: flex; flex-direction: column; gap: 0; }
+.fgroup__body > .fsearch { margin-bottom: var(--s-2); }
+.fgroup__body > .budget { margin-top: var(--s-1); }
+.fgroup__badge {
+  margin-left: auto;
+  margin-right: var(--s-2);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--c-blue-soft);
+  color: var(--c-blue);
+  font-size: var(--t-nano);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 34px;
+  cursor: pointer;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-body);
+}
+.checkline input { position: absolute; opacity: 0; width: 0; height: 0; }
+.checkline .check__box { margin-top: 0; flex: none; }
+.checkline__label { min-width: 0; }
+/* Страна рядом с курортом — та же строка, но тише: «Аланья» несёт выбор,
+   «Турция» лишь уточняет, к чему она относится. */
+.checkline__sub { font-style: normal; color: var(--c-ink-3); }
+.checkline__count { margin-left: auto; font-size: var(--t-meta); color: var(--c-ink-3); font-variant-numeric: tabular-nums; }
+.checkline--off { color: var(--c-ink-4); cursor: not-allowed; }
+.checkline--any { font-weight: var(--fw-medium); }
+
+/* «только» — оставить одно это значение. Появляется по наведению на строку:
+   постоянно висящая ссылка у каждого пункта превратила бы список в свалку. */
+.checkline__only {
+  margin-left: var(--s-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-meta);
+  color: var(--c-blue);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.checkline:hover .checkline__only,
+.checkline__only:focus-visible { opacity: 1; }
+@media (hover: none) { .checkline__only { display: none; } }
+
+/* Переключатели площадки: та же строка списка, но без заголовка группы */
+.ftoggles {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--c-line);
+}
+
+/* Бюджет: два поля ввода и быстрые пороги вместо ползунка — сумму набирают
+   точнее, чем ловят ручкой, а «до 400 000» закрывает самый частый случай. */
+.budget { display: flex; flex-direction: column; gap: var(--s-3); }
+.budget__row { display: flex; align-items: flex-end; gap: var(--s-2); }
+.budget__field { flex: 1 1 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.budget__field span { font-size: var(--t-meta); color: var(--c-ink-3); }
+.budget__field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);
+  background: var(--c-white);
+  font: inherit;
+  font-size: var(--t-body-s);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+.budget__field input:focus-visible { border-color: var(--c-ink); outline: none; }
+.budget__dash { padding-bottom: 10px; color: var(--c-ink-3); }
+.budget__for { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.budget__steps { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.budget__step {
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  font: inherit;
+  font-size: var(--t-meta);
+  color: var(--c-ink-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.budget__step:hover { border-color: var(--c-line-strong); }
+.budget__step[aria-pressed="true"] { border-color: var(--c-ink); background: var(--c-ink); color: var(--c-white); }
+
+/* Оценка отеля в строке фильтра — той же плашкой, что и в карточке выдачи */
+.score-pill {
+  display: inline-block;
+  min-width: 34px;
+  padding: 1px var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Хвост длинного списка: та же строка списка по кеглю и высоте, поэтому
+   читается как его продолжение, а не как отдельный элемент управления. */
+.fmore {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-body-s);
+  color: var(--c-blue);
+  cursor: pointer;
+}
+.fmore svg { width: 14px; height: 14px; }
+.fmore:hover { text-decoration: underline; }
+
+.range { display: flex; flex-direction: column; gap: var(--s-2); }
+.range__vals { display: flex; justify-content: space-between; font-size: var(--t-body-s); font-variant-numeric: tabular-nums; color: var(--c-ink); }
+.range__track { position: relative; height: 28px; }
+.range__rail { position: absolute; top: 13px; left: 0; right: 0; height: 3px; border-radius: var(--r-xs); background: var(--c-line); }
+.range__fill { position: absolute; top: 13px; height: 3px; border-radius: var(--r-xs); background: var(--c-ink); }
+.range input[type="range"] {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.range input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 20px; height: 20px;
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  border: 1px solid var(--c-line-strong);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+}
+.range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 20px; height: 20px;
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  border: 1px solid var(--c-line-strong);
+  cursor: pointer;
+}
+.range input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+
+.stars-pick { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.star-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 36px;
+  padding-inline: var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink-2);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.star-chip svg { width: 12px; height: 12px; color: var(--c-warm-deep); }
+.star-chip:hover { border-color: var(--c-ink); }
+.star-chip[aria-pressed="true"] { background: var(--c-ink); border-color: var(--c-ink); color: var(--c-white); }
+.star-chip[aria-pressed="true"] svg { color: var(--c-white); }
+
+.fsearch {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);
+  background: var(--c-white);
+}
+.fsearch svg { width: 16px; height: 16px; color: var(--c-ink-3); }
+.fsearch input { flex: 1 1 auto; min-width: 0; border: 0; background: none; font-size: var(--t-body-s); }
+.fsearch input:focus { outline: none; }
+
+/* --- Результаты --------------------------------------------------------- */
+.results { display: flex; flex-direction: column; gap: var(--s-4); }
+.results--grid { display: grid; gap: var(--grid-gap); grid-template-columns: 1fr; }
+@media (min-width: 700px)  { .results--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1360px) { .results--grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.results--grid .tour-row { grid-template-columns: 1fr; }
+.results--grid .tour-row__body { border-right: 0; border-bottom: 1px solid var(--c-line); }
+.results--grid .tour-row__media { aspect-ratio: 4 / 3; min-height: 0; }
+
+.result-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+}
+.result-hint__lead { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-body-s); }
+.result-hint__lead svg { width: 20px; height: 20px; color: var(--c-ink-2); }
+.result-hint b { font-weight: var(--fw-medium); font-variant-numeric: tabular-nums; }
+
+.days {
+  display: flex;
+  gap: var(--s-1);
+  overflow-x: auto;
+  width: 100%;
+  padding-top: var(--s-2);
+}
+.day-col {
+  flex: 1 0 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--s-2) var(--s-1) var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);
+  background: var(--c-white);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.day-col:hover { border-color: var(--c-ink); }
+.day-col__dow { font-size: var(--t-nano); text-transform: uppercase; letter-spacing: var(--ls-caps); color: var(--c-ink-3); }
+.day-col__date { font-size: var(--t-body-s); font-weight: var(--fw-medium); color: var(--c-ink); }
+.day-col__price { font-size: var(--t-meta); color: var(--c-ink-2); }
+.day-col--min { border-color: var(--c-ink); }
+.day-col--min .day-col__price { color: var(--c-ink); font-weight: var(--fw-medium); }
+.day-col--sel { background: var(--c-blue-soft); border-color: var(--c-blue); }
+/* В колонке фильтров пять дней делят 300px поровну, без горизонтальной прокрутки */
+.filters .day-col { flex: 1 1 0; min-width: 0; padding-inline: 2px; }
+
+/* Скелетоны вместо спиннера */
+.sk-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+}
+@media (min-width: 900px) { .sk-row { grid-template-columns: 300px minmax(0, 1fr) 240px; } }
+.sk-line { height: 12px; border-radius: var(--r-xs); }
+.sk-media { aspect-ratio: 4 / 3; border-radius: var(--r-m); }
+.sk-col { display: flex; flex-direction: column; gap: var(--s-2); }
+
+/* --- Карта -------------------------------------------------------------- */
+.map-view { display: grid; gap: var(--s-4); }
+@media (min-width: 1024px) { .map-view { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; } }
+.map-canvas {
+  position: relative;
+  min-height: 420px;
+  height: 60vh;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background:
+    repeating-linear-gradient(0deg, var(--c-line) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(90deg, var(--c-line) 0 1px, transparent 1px 40px),
+    var(--c-surface-cool);
+  overflow: hidden;
+}
+@media (min-width: 1024px) { .map-canvas { position: sticky; top: calc(var(--header-h-compact) + 70px); } }
+.map-note {
+  position: absolute;
+  left: var(--s-3); top: var(--s-3);
+  z-index: 1;
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+.pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--c-blue);
+  color: var(--c-white);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  border: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: background-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+.pin:hover, .pin.is-active { background: var(--c-ink); transform: translate(-50%, -100%) scale(1.06); }
+.pin--cluster { background: var(--c-ink); }
+.map-list { display: flex; flex-direction: column; gap: var(--s-3); max-height: 60vh; overflow-y: auto; }
+.map-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--s-3);
+  padding: var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+  cursor: pointer;
+}
+.map-card:hover, .map-card.is-active { border-color: var(--c-ink); }
+.map-card__media { position: relative; aspect-ratio: 1; border-radius: var(--r-xs); overflow: hidden; background: var(--c-surface-cool); }
+/* В миниатюре от заглушки остаётся только знак: подпись здесь не читается */
+.map-card__media .photo-stub b,
+.map-card__media img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Ниже 1024 фильтры живут только в шторке: тот же узел переезжает в неё
+   и возвращается обратно, поэтому состояние и обработчики не дублируются. */
+@media (max-width: 1023px) {
+  [data-filters-host] { display: none; }
+  .sheet[data-open="true"] [data-filters-host] { display: block; }
+}
+
+/* --- Мобильные фильтры: шторка снизу ------------------------------------ */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: none;
+}
+.sheet[data-open="true"] { display: block; }
+.sheet__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .4); }
+.sheet__panel {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-page);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  animation: sheet-up var(--dur-4) var(--ease-out);
+}
+@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet__panel { animation: none; } }
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--gutter);
+  border-bottom: 1px solid var(--c-line);
+}
+/* Заголовок шторки может быть двухстрочным: название и статус под ним */
+.sheet__headText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sheet__sub { font-size: var(--t-meta); color: var(--c-ink-2); }
+.sheet__body { overflow-y: auto; padding: var(--s-3) var(--gutter); }
+.sheet__foot {
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--gutter) var(--s-4);
+  border-top: 1px solid var(--c-line);
+  background: var(--c-white);
+}
+.sheet__foot .btn { flex: 1 1 auto; }
+
+/* --- Нижняя панель телефона --------------------------------------------- */
+/* Пять действий, к которым возвращаются с любого места страницы. Знак сверху,
+   подпись снизу: без подписи «дом» и «человек» на первом заходе не читаются.
+   Панель показывается там же, где шапка сбрасывает свои значки, — ниже 1024. */
+.tabbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in srgb, var(--c-page) 96%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--c-line);
+}
+@media (min-width: 1024px) { .tabbar { display: none; } }
+
+.tabbar__item {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font: inherit;
+  /* 9px в подписи вкладки читались как служебная сноска: панель — основная
+     навигация телефона, её подписи набраны тем же кеглем, что мета в карточке. */
+  font-size: var(--t-meta);
+  line-height: 1;
+  letter-spacing: var(--ls-none);
+  color: var(--c-ink-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur-2) var(--ease-out);
+}
+.tabbar__item:active .tabbar__ico { transform: scale(.92); }
+.tabbar__item > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabbar__ico {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 30px;
+  border-radius: var(--r-pill);
+  transition: background-color var(--dur-2) var(--ease-out),
+              transform var(--dur-1) var(--ease-out);
+}
+.tabbar__ico svg { width: 22px; height: 22px; }
+.tabbar__item.is-active { color: var(--c-ink); font-weight: var(--fw-medium); }
+.tabbar__item.is-active .tabbar__ico { background: var(--c-surface); }
+/* Поиск — единственное лаймовое пятно панели: это главное действие сайта */
+.tabbar__item--accent { color: var(--c-ink); font-weight: var(--fw-medium); }
+.tabbar__item--accent .tabbar__ico { background: var(--c-lime); }
+.tabbar__count {
+  position: absolute;
+  top: -2px; right: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px; height: 16px;
+  padding-inline: 4px;
+  border-radius: var(--r-pill);
+  background: var(--c-blue);
+  color: var(--c-white);
+  font-size: var(--t-nano);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+}
+.tabbar__count:empty { display: none; }
+@media (max-width: 1023px) {
+  body.has-tabbar { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); }
+  /* Плашка «Ваш город?» садится над панелью, а не под неё */
+  body.has-tabbar .city-prompt { bottom: calc(var(--tabbar-h) + var(--s-3) + env(safe-area-inset-bottom, 0px)); }
+  body.has-tabbar .toasts { bottom: calc(var(--tabbar-h) + var(--s-3) + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Шторка поиска: в неё переезжает та же форма, что стоит на первом экране,
+   поэтому карточка внутри теряет собственный фон и тень. */
+.sheet--search .sheet__panel { max-height: 88svh; }
+.sheet--search .sheet__body { padding-bottom: var(--s-5); }
+.sheet--search .search {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.sheet--search .search__tabs { display: flex; }
+
+/* --- Панели: чат, избранное, кабинет -------------------------------------
+   Одна шторка на три обращения. На телефоне она приходит снизу — оттуда, где
+   стоит нижняя панель, которой её и открывают. От планшета становится
+   колонкой у правого края: страница остаётся видимой, потому что за
+   отложенным и заявками возвращаются, не бросая то, что смотрели. */
+.sheet--panel .sheet__panel { max-height: 88svh; }
+@media (min-width: 768px) {
+  .sheet--panel .sheet__panel {
+    left: auto;
+    right: var(--gutter);
+    top: var(--gutter);
+    bottom: var(--gutter);
+    width: min(420px, calc(100vw - var(--gutter) * 2));
+    max-height: none;
+    border-radius: var(--r-xl);
+    animation: panel-in var(--dur-4) var(--ease-out);
+  }
+  /* Колонка задана по высоте окна, поэтому тело растягивается, а действие
+     прижато к низу: иначе кнопка вставала посреди панели. */
+  .sheet--panel .sheet__body { flex: 1 1 auto; }
+  @keyframes panel-in { from { transform: translateX(24px); opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .sheet--panel .sheet__panel { animation: none; } }
+.sheet--panel .sheet__body { display: flex; flex-direction: column; gap: var(--s-4); padding-block: var(--s-4); }
+.sheet--panel .sheet__foot .btn { flex: 1 1 auto; }
+.panel__lead { font-size: var(--t-body-s); color: var(--c-ink-2); }
+.panel__form { display: flex; flex-direction: column; gap: var(--s-3); }
+/* Разделитель со словом: «или напишите здесь» — это развилка, а не заголовок */
+.panel__sep {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+}
+.panel__sep::before, .panel__sep::after {
+  content: "";
+  flex: 1 1 0;
+  height: 1px;
+  background: var(--c-line);
+}
+.panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-2) var(--s-6);
+  text-align: center;
+}
+.panel__empty p { font-size: var(--t-body-s); color: var(--c-ink-2); max-width: 34ch; }
+.panel__emptyIco {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: var(--r-circle);
+  background: var(--c-surface);
+  color: var(--c-ink-3);
+}
+.panel__emptyIco svg { width: 28px; height: 28px; }
+.panel__empty .btn { margin-top: var(--s-2); }
+
+/* Канал связи — строка, а не карточка: три способа написать одному и тому же
+   менеджеру не должны выглядеть как три разных продукта. */
+.chan-list { display: flex; flex-direction: column; gap: var(--s-2); }
+.chan {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 64px;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+  color: var(--c-ink);
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+a.chan:hover { border-color: var(--c-ink); }
+.chan__ico {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: var(--r-circle);
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+.chan__ico svg { width: 20px; height: 20px; }
+.chan--wa .chan__ico { background: var(--c-wa); color: var(--c-white); }
+.chan--tg .chan__ico { background: var(--c-tg); color: var(--c-white); }
+.chan__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.chan__text b { font-size: var(--t-body); font-weight: var(--fw-medium); }
+.chan__text span { font-size: var(--t-meta); color: var(--c-ink-2); }
+.chan__go { flex: none; margin-left: auto; width: 18px; height: 18px; color: var(--c-ink-3); }
+/* Раздел, который откроется после входа: назван, но не притворяется рабочим */
+.chan--off { border-style: dashed; background: none; }
+.chan--off .chan__text b { color: var(--c-ink-2); }
+.chan--off .chan__ico { color: var(--c-ink-3); }
+
+/* --- Чат: переписка внутри шторки -----------------------------------------
+   Три яруса, как в любом мессенджере: заголовок со статусом, лента и поле
+   ввода, прижатое к низу. Лента прокручивается сама, поэтому шторка чата
+   держит фиксированную высоту: у формы высота росла от содержимого, а у
+   переписки она должна быть постоянной, иначе окно прыгает на каждой реплике.
+   Ниже переписки — WhatsApp, Telegram и телефон: чат не единственная дверь. */
+/* На телефоне высоту задаём явно: от планшета шторка и так растянута между
+   верхним и нижним отступом окна, и вторая высота там только спорила бы. */
+@media (max-width: 767.98px) { .sheet--chat .sheet__panel { height: 88svh; } }
+.sheet--chat .sheet__body {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.chat { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.chat__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-4) var(--gutter) var(--s-5);
+  background: var(--c-surface);
+}
+/* Дата — не заголовок, а отбивка: серым в подложку, по центру ленты */
+.chat__day {
+  margin-bottom: var(--s-4);
+  text-align: center;
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+}
+.chat__msgs { display: flex; flex-direction: column; gap: var(--s-2); }
+
+/* Реплика: свои — синим справа, менеджера — белым слева с кружком-аватаром.
+   Пузырь не шире 84% ленты, иначе разговор перестаёт читаться как разговор. */
+.msg { display: flex; align-items: flex-end; gap: var(--s-2); max-width: 84%; }
+.msg--in { align-self: flex-start; }
+.msg--out { align-self: flex-end; }
+.msg__ava {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: var(--r-circle);
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+}
+/* Продолжение реплики того же человека: кружок не повторяется, но отступ
+   держит — иначе вторая строка съезжает под аватар первой. */
+.msg__ava--tail { background: none; }
+.msg__bubble {
+  position: relative;
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  border-radius: var(--r-l);
+  font-size: var(--t-body-s);
+  line-height: var(--lh-body);
+}
+.msg--in .msg__bubble {
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-bottom-left-radius: var(--r-xs);
+  color: var(--c-ink-body);
+}
+.msg--out .msg__bubble {
+  background: var(--c-blue);
+  border-bottom-right-radius: var(--r-xs);
+  color: var(--c-white);
+}
+/* Время — в самом пузыре, мелким и приглушённым: отдельной строкой под
+   каждой репликой оно удваивало высоту ленты. */
+.msg__time {
+  display: block;
+  margin-top: 2px;
+  text-align: right;
+  font-size: var(--t-nano);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink-3);
+}
+.msg--out .msg__time { color: rgba(255, 255, 255, .7); }
+/* «Печатает»: три точки в пузыре менеджера, движение — единственное в панели */
+.msg__bubble--typing { display: flex; gap: 4px; padding: var(--s-4); }
+.msg__bubble--typing i {
+  width: 6px; height: 6px;
+  border-radius: var(--r-circle);
+  background: var(--c-ink-3);
+  animation: chat-dot 1.2s var(--ease-in-out) infinite;
+}
+.msg__bubble--typing i:nth-child(2) { animation-delay: .15s; }
+.msg__bubble--typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes chat-dot { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .msg__bubble--typing i { animation: none; } }
+
+/* Подсказки первого хода: четыре вопроса, с которых начинается почти каждая
+   переписка. После первой реплики они уходят — дальше разговор ведёт человек. */
+.chat__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-4); }
+.chat__chip {
+  min-height: 36px;
+  padding-inline: var(--s-4);
+  border: 1px solid var(--c-blue);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  color: var(--c-blue);
+  font-size: var(--t-body-s);
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+.chat__chip:hover { background: var(--c-blue-soft); }
+
+/* Другие способы связи — после переписки, отбитые линией со словом */
+.chat__more { margin-top: var(--s-6); display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* Поле ввода: строка растёт до четырёх строк, кнопка — круг с самолётиком */
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-2);
+  width: 100%;
+}
+.composer__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--tap-min);
+  max-height: 112px;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--t-body-s);
+  line-height: var(--lh-body);
+  resize: none;
+}
+.composer__input:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 1px; border-color: var(--c-blue); }
+.composer__send {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min); height: var(--tap-min);
+  border: 0;
+  border-radius: var(--r-circle);
+  background: var(--c-blue);
+  color: var(--c-white);
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+.composer__send:hover { background: var(--c-blue-deep); }
+.composer__send svg { width: 20px; height: 20px; }
+
+/* Статус над лентой: точка и строка. Зелёная — в часы работы, серая — вне их;
+   «онлайн» без графика было бы обещанием, которого никто не давал. */
+.chat-status { display: inline-flex; align-items: center; gap: var(--s-2); }
+.chat-status i {
+  flex: none;
+  width: 7px; height: 7px;
+  border-radius: var(--r-circle);
+  background: var(--c-ink-4);
+}
+.chat-status.is-on i { background: var(--c-wa); }
+
+/* Отложенный тур: снимок, отель, даты и цена — ровно то, по чему сравнивают */
+.fav-list { display: flex; flex-direction: column; gap: var(--s-2); }
+.fav-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+}
+.fav-row__media {
+  position: relative;
+  flex: none;
+  width: 64px; height: 64px;
+  border-radius: var(--r-s);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+}
+.fav-row__media img { width: 100%; height: 100%; object-fit: cover; }
+.fav-row__media .photo-stub b { display: none; }
+.fav-row__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.fav-row__text b {
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fav-row__text .t-meta { color: var(--c-ink-2); }
+.fav-row__side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-1); flex: none; }
+.fav-row__side .t-price { font-size: var(--t-h6); }
+.fav-row__x { width: 32px; height: 32px; border-color: var(--c-line); }
+.fav-row__x svg { width: 14px; height: 14px; }
+.fav-row--gone { color: var(--c-ink-3); }
+.fav-row--gone b { font-size: var(--t-body-s); font-weight: var(--fw-regular); }
+
+.mobile-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--c-page) 96%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--c-line);
+}
+/* nowrap: «На карте» ломалось на две строки внутри кнопки и рядом со
+   стандартной панелью читалось как поломка. Ширины хватает и на 320px. */
+.mobile-bar .btn { flex: 1 1 auto; --btn-h: 44px; padding-inline: var(--s-2); white-space: nowrap; }
+@media (min-width: 1024px) { .mobile-bar { display: none; } }
+@media (max-width: 1023px) { body.has-mobile-bar { padding-bottom: 72px; } }
+/* Страничная плашка — фильтры и сортировка в выдаче — не заменяет нижнюю
+   панель, а садится над ней: панель одна на весь сайт, и уходить с внутренней
+   страницы человек привык через неё. */
+@media (max-width: 1023px) {
+  body.has-tabbar .mobile-bar {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--s-2);
+  }
+  body.has-tabbar.has-mobile-bar {
+    padding-bottom: calc(var(--tabbar-h) + 72px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Тосты и плашка города поднимаются над обеими полосами */
+  body.has-tabbar.has-mobile-bar .toasts,
+  body.has-tabbar.has-mobile-bar .city-prompt {
+    bottom: calc(var(--tabbar-h) + 72px + var(--s-3) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ============================================================================
+   13. Печатать нечего, но состояние ошибки должно быть видно всегда
+   ========================================================================== */
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-8);
+  border: 1px solid var(--c-signal);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+}
+.error-state h3 { font-size: var(--t-h5); color: var(--c-ink); }
+.error-state p { max-width: 60ch; color: var(--c-ink-2); }
+
+/* ============================================================================
+   14. Страница отеля
+   Первый экран отвечает на три вопроса разом: как выглядит (галерея), что это
+   за отель (оценка, категория, место, шесть фактов) и сколько стоит (цена
+   справа). Ниже — таблица «ночей × дат вылета» и список предложений: цена
+   отеля меняется от даты сильнее, чем от чего-либо ещё, и одной строкой этого
+   не показать. Дальше сам отель, отзывы и похожие туры.
+   ========================================================================== */
+
+.tp { padding-top: var(--s-4); }
+
+/* --- Полоса поиска над крошками ------------------------------------------
+   На странице отеля полоса ничего не ищет: она называет условия, в которых
+   отель был найден. Подпись слева говорит об этом прямо, чтобы строку не
+   приняли за форму, которая уже отработала. */
+.searchbar__label {
+  flex: none;
+  font-size: var(--t-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+@media (max-width: 767.98px) { .searchbar__label { display: none; } }
+
+/* --- Первый экран: галерея, отель, цена ----------------------------------- */
+.tp-hero { display: grid; gap: var(--grid-gap); align-items: start; }
+/* Лента сторис — часть колонки с кадром, а не отдельная колонка: без явной
+   расстановки она забирала себе средний трек сетки и выдавливала описание
+   отеля вправо. Поэтому ряды объявлены прямо: кадр и сторис друг под другом
+   слева, текст и цена — на всю высоту обоих. */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .tp-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tp-hero > .tp-gallery { grid-column: 1; grid-row: 1; }
+  .tp-hero > .tp-stories { grid-column: 1; grid-row: 2; }
+  .tp-hero > .tp-info { grid-column: 2; grid-row: 1 / span 2; }
+  .tp-hero > .tp-side { grid-column: 1 / -1; grid-row: 3; }
+}
+@media (min-width: 1024px) {
+  /* Три колонки, а не две: кадр и текст равновелики, цена уже обоих —
+     ей нужна ширина суммы и кнопки, а не абзаца. */
+  .tp-hero { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 320px; }
+  .tp-hero > .tp-gallery { grid-column: 1; grid-row: 1; }
+  .tp-hero > .tp-stories { grid-column: 1; grid-row: 2; }
+  .tp-hero > .tp-info { grid-column: 2; grid-row: 1 / span 2; }
+  .tp-hero > .tp-side { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+/* --- Галерея --------------------------------------------------------------
+   Кадр, стрелки, счётчик и лента миниатюр. Раньше здесь стоял один снимок во
+   всю ширину: он занимал первый экран целиком и не давал посмотреть отель. */
+.tp-gallery { min-width: 0; }
+.tp-gallery__stage {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  /* В три колонки кадр сужается, и на 3/2 он оказывался на семьдесят
+     пикселей ниже соседней колонки с фактами. 4/3 выравнивает низ. */
+  border-radius: var(--r-l);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+}
+@media (min-width: 1024px) { .tp-gallery__stage { aspect-ratio: 4 / 3; } }
+.tp-gallery__main {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.tp-gallery__main img,
+.tp-gallery__main .photo-stub { width: 100%; height: 100%; object-fit: cover; }
+
+/* Стрелки появляются на наведении и на клавиатурном фокусе, но на тач-экране
+   наведения не бывает — там они видны всегда. */
+.tp-gallery__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border: 0;
+  border-radius: var(--r-circle);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(6px);
+  color: var(--c-ink);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.tp-gallery__nav svg { width: 20px; height: 20px; }
+.tp-gallery__nav--prev { left: var(--s-3); }
+.tp-gallery__nav--next { right: var(--s-3); }
+.tp-gallery__stage:hover .tp-gallery__nav,
+.tp-gallery__nav:focus-visible { opacity: 1; }
+@media (hover: none) { .tp-gallery__nav { opacity: 1; } }
+
+.tp-gallery__count,
+.tp-gallery__zoom {
+  position: absolute;
+  bottom: var(--s-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 32px;
+  padding-inline: var(--s-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(6px);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink-body);
+  font-variant-numeric: tabular-nums;
+}
+.tp-gallery__count { left: var(--s-3); }
+.tp-gallery__zoom { right: var(--s-3); cursor: pointer; }
+.tp-gallery__zoom svg { width: 16px; height: 16px; }
+
+/* Лента миниатюр прокручивается вбок: двенадцать кадров в столбец под кадром
+   отняли бы у первого экрана ровно ту высоту, ради которой галерея и нужна. */
+.tp-thumbs {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  padding-bottom: var(--s-1);
+}
+.tp-thumb {
+  flex: 0 0 84px;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xs);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+  cursor: pointer;
+  scroll-snap-align: start;
+  opacity: .72;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.tp-thumb img, .tp-thumb .photo-stub { width: 100%; height: 100%; object-fit: cover; }
+.tp-thumb .photo-stub b { display: none; }
+.tp-thumb:hover { opacity: 1; }
+.tp-thumb[aria-selected="true"] { opacity: 1; outline: 2px solid var(--c-blue); outline-offset: -2px; }
+
+/* --- Сторис ----------------------------------------------------------------
+   Лента круглых обложек под галереей. Кружок, а не плитка: круг читается как
+   «короткий ролик, который откроется на весь экран», и не спорит с ниже
+   лежащей лентой прямоугольных миниатюр самой галереи. */
+.tp-stories {
+  display: flex;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding-bottom: var(--s-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tp-stories::-webkit-scrollbar { display: none; }
+.tp-stories[hidden] { display: none; }
+.tp-story {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  flex: none;
+  width: 72px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+/* Кольцо — подложка с отступом, а не рамка с обрезкой: круглит кадр он сам
+   своим радиусом, поэтому обходимся без overflow: hidden. Белый просвет между
+   кольцом и кадром даёт рамка самого снимка. */
+.tp-story__ring {
+  display: block;
+  width: 64px; height: 64px;
+  padding: 2px;
+  border-radius: var(--r-circle);
+  background: var(--c-blue);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.tp-story__ring img,
+.tp-story__ring .photo-stub {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-circle);
+  border: 2px solid var(--c-white);
+  background: var(--c-surface-cool);
+}
+.tp-story__ring .photo-stub b { display: none; }
+.tp-story:hover .tp-story__ring { transform: scale(1.05); }
+.tp-story__name {
+  max-width: 100%;
+  font-size: var(--t-micro);
+  color: var(--c-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Просмотр сторис: вертикальный кадр, полоски прогресса сверху, тап по левой
+   и правой половине — назад и вперёд. На десктопе это карточка по центру, на
+   телефоне — весь экран. */
+.st { position: fixed; inset: 0; z-index: var(--z-overlay); display: flex; align-items: center; justify-content: center; }
+.st__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .92); }
+.st__box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  overflow: hidden;
+  background: #000;
+}
+@media (min-width: 768px) {
+  .st__box {
+    width: min(440px, 92vw);
+    height: min(780px, 88vh);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-2);
+  }
+}
+.st__frame { position: absolute; inset: 0; margin: 0; }
+.st__frame img { width: 100%; height: 100%; object-fit: cover; }
+.st__frame .photo-stub { width: 100%; height: 100%; }
+.st__bars { position: absolute; inset: var(--s-3) var(--s-3) auto; z-index: 2; display: flex; gap: 4px; }
+.st__bar { flex: 1 1 0; height: 3px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .35); overflow: hidden; }
+.st__bar i { display: block; height: 100%; width: 0; background: var(--c-white); }
+.st__bar[data-state="done"] i { width: 100%; }
+/* Полоска текущего кадра едет ровно столько, сколько живёт кадр: длительность
+   задана в JS одной константой, здесь она повторена — держать их в паре
+   обязательно, иначе прогресс врёт. */
+.st__bar[data-state="run"] i { animation: st-run 4000ms linear forwards; }
+@keyframes st-run { from { width: 0; } to { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .st__bar[data-state="run"] i { animation: none; width: 100%; } }
+.st__top {
+  position: absolute;
+  inset: calc(var(--s-3) + 12px) var(--s-3) auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--c-inverse-ink);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .6);
+}
+.st__who { display: grid; gap: 1px; min-width: 0; }
+.st__who b { font-size: var(--t-body-s); }
+.st__who span { font-size: var(--t-micro); color: rgba(255, 255, 255, .8); }
+.st__x { margin-left: auto; flex: none; background: transparent; border-color: var(--c-inverse-line); color: var(--c-inverse-ink); }
+.st__x:hover { background: rgba(255, 255, 255, .12); border-color: var(--c-inverse-ink); }
+/* Прозрачные половины экрана вместо стрелок: так листают сторис везде, и
+   палец не ищет мелкую кнопку. */
+.st__tap { position: absolute; top: 64px; bottom: 0; width: 45%; z-index: 1; border: 0; background: transparent; cursor: pointer; }
+.st__tap--prev { left: 0; }
+.st__tap--next { right: 0; }
+
+/* --- Просмотр во весь экран ----------------------------------------------- */
+.gal { position: fixed; inset: 0; z-index: var(--z-overlay); }
+.gal__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .9); }
+.gal__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  height: 100%;
+  padding: var(--s-3) var(--s-4) var(--s-4);
+}
+.gal__bar { display: flex; align-items: center; gap: var(--s-3); color: var(--c-inverse-ink); }
+.gal__title { font-size: var(--t-body); font-weight: var(--fw-medium); }
+.gal__count {
+  margin-left: auto;
+  font-size: var(--t-body-s);
+  color: var(--c-inverse-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.gal__x { background: transparent; border-color: var(--c-inverse-line); color: var(--c-inverse-ink); }
+.gal__x:hover { background: rgba(255, 255, 255, .12); border-color: var(--c-inverse-ink); }
+.gal__stage { position: relative; flex: 1 1 auto; min-height: 0; }
+.gal__frame { position: absolute; inset: 0; margin: 0; }
+.gal__frame img { width: 100%; height: 100%; object-fit: contain; }
+.gal__frame .photo-stub { width: 100%; height: 100%; }
+.gal__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border: 1px solid var(--c-inverse-line);
+  border-radius: var(--r-circle);
+  background: rgba(0, 0, 0, .4);
+  color: var(--c-inverse-ink);
+  cursor: pointer;
+}
+.gal__nav svg { width: 22px; height: 22px; }
+.gal__nav:first-of-type { left: 0; }
+.gal__nav:last-of-type { right: 0; }
+.gal__nav:hover { border-color: var(--c-inverse-ink); }
+.gal__thumbs { display: flex; gap: var(--s-2); flex: none; overflow-x: auto; scrollbar-width: thin; }
+.gal__thumb {
+  flex: 0 0 72px;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xs);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: .5;
+}
+.gal__thumb img, .gal__thumb .photo-stub { width: 100%; height: 100%; object-fit: cover; }
+.gal__thumb .photo-stub b { display: none; }
+.gal__thumb[aria-selected="true"] { opacity: 1; outline: 2px solid var(--c-white); outline-offset: -2px; }
+@media (max-width: 599.98px) { .gal__thumbs { display: none; } }
+
+/* --- Главное об отеле ------------------------------------------------------ */
+.tp-info { display: grid; align-content: start; gap: var(--s-3); min-width: 0; }
+.tp-info__top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+.tp-info__rate { display: inline-flex; align-items: center; gap: var(--s-2); text-decoration: none; }
+.tp-info__rate > span + span { display: grid; gap: 1px; }
+.tp-info__rate b { font-size: var(--t-body-s); color: var(--c-ink); font-weight: var(--fw-medium); }
+.tp-info__rate span span { font-size: var(--t-meta); color: var(--c-blue); }
+.tp-info__rate:hover span span { text-decoration: underline; text-underline-offset: 3px; }
+.tp-info__cat { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+.tp-info__cat span { color: var(--c-ink-2); }
+.tp-info__name { margin: 0; }
+.tp-info__place { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-info__place svg { flex: none; width: 16px; height: 16px; color: var(--c-ink-3); }
+.tp-info__place > span { display: inline-flex; align-items: center; gap: var(--s-1); }
+/* Три строки описания и «Подробнее» рядом: полный текст живёт в разделе
+   «Об отеле», и повторять его на первом экране незачем. */
+.tp-info__text {
+  font-size: var(--t-body-s);
+  line-height: var(--lh-long);
+  color: var(--c-ink-body);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tp-info__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+@media (min-width: 600px) { .tp-info__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.tp-fact {
+  display: grid;
+  /* start, а не stretch: у карточки с короткой подписью рядов меньше, и лишняя
+     высота растекалась по ним — значение и подпись уезжали вниз, а ряд фактов
+     переставал читаться одной линией. */
+  align-content: start;
+  gap: 2px;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+}
+.tp-fact__icon { color: var(--c-ink-3); }
+.tp-fact__icon svg { width: 20px; height: 20px; }
+.tp-fact__value { font-size: var(--t-h6); color: var(--c-ink); }
+.tp-fact__label { font-size: var(--t-meta); color: var(--c-ink-3); }
+
+/* --- Карточка цены -------------------------------------------------------- */
+.tp-side { min-width: 0; }
+.tp-price {
+  padding: var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+  box-shadow: var(--shadow-1);
+}
+/* Иконка внутри кнопки цены: без явного размера svg растягивался на всю
+   ширину блочной кнопки и вырастал в шестидесятипиксельную трубку. */
+.tp-price .btn svg { flex: none; width: 18px; height: 18px; }
+.tp-price__row { display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
+.tp-price__per { margin-top: var(--s-1); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-price__per s { margin-right: 2px; }
+.tp-price__facts {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-4) 0;
+  padding: var(--s-4) 0;
+  border-top: 1px solid var(--c-line);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--t-body-s);
+}
+.tp-price__facts li { display: flex; align-items: center; gap: var(--s-2); }
+.tp-price__facts svg { flex: none; width: 18px; height: 18px; color: var(--c-ink-3); }
+/* Отступ между кнопками, поставленными друг под другом, — только у прямых
+   детей карточки. Без «>» правило доставало и до пары «В избранное» —
+   «Поделиться»: та стоит в строку, и вертикальный отступ опускал вторую
+   кнопку на десять пикселей, отчего пара выглядела разной высоты. */
+.tp-price > .btn + .btn,
+.tp-price > .btn + .tp-price__note { margin-top: var(--s-2); }
+.tp-price__note { margin-top: var(--s-3); font-size: var(--t-meta); color: var(--c-ink-2); }
+.tp-price__acts { display: flex; gap: var(--s-2); margin-top: var(--s-3); }
+/* min-width: 0 обязателен: у флекс-элемента он по умолчанию auto, то есть не
+   меньше содержимого, и «В избранное» отбирало ширину у «Поделиться» —
+   пара кнопок выходила разного размера при одинаковых правилах. */
+.tp-price__acts .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: var(--s-2);
+  white-space: nowrap;
+}
+/* Нажатое «в избранное» отмечается заливкой сердца, а не сменой подписи:
+   подпись пришлось бы менять на всех языках, а знак понятен без слов. */
+.tp-price__acts [aria-pressed="true"] svg { color: var(--c-signal); fill: currentColor; }
+.tp-price__marks { display: grid; gap: var(--s-2); margin-top: var(--s-4); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-price__marks li { display: flex; align-items: flex-start; gap: var(--s-2); }
+.tp-price__marks svg { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--c-ink-3); }
+
+/* --- Разделы страницы ------------------------------------------------------ */
+.tp-sec { margin-top: var(--s-12); }
+.tp-sec__head { margin-bottom: var(--s-5); }
+.tp-block { margin-top: var(--s-8); }
+.tp-block > h3 { margin-bottom: var(--s-4); }
+.tp-block > .t-meta { margin-top: var(--s-3); color: var(--c-ink-3); }
+.tp-cols { display: grid; gap: var(--s-8); }
+@media (min-width: 900px) { .tp-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--grid-gap); } }
+.tp-cols__title { margin-bottom: var(--s-4); }
+
+/* --- Мини-форма над таблицей ----------------------------------------------
+   Те же поля, что в общем поиске, минус вкладки и «Куда»: отель уже выбран,
+   и спрашивать направление второй раз — значит предлагать уйти со страницы.
+   Собственная раскладка нужна потому, что треков здесь пять, а не шесть. */
+.tp-toursearch { margin-bottom: var(--s-5); }
+.tp-toursearch__toggle { justify-content: flex-start; text-align: left; }
+.tp-toursearch__toggle svg { flex: none; width: 18px; height: 18px; color: var(--c-ink-3); }
+.tp-toursearch__toggle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Приём только для узких экранов: на десктопе строка формы видна всегда и
+   раскладка шире 900px не меняется. */
+@media (min-width: 900px) { .tp-toursearch__toggle { display: none; } }
+@media (max-width: 899.98px) {
+  .tp-toursearch[data-open="false"] .search--tp { display: none; }
+  .tp-toursearch[data-open="true"] .search--tp { margin-top: var(--s-3); }
+}
+.search--tp { margin-bottom: 0; }
+@media (min-width: 900px) {
+  .search--tp .search__row {
+    grid-template-columns:
+      minmax(140px, 1fr)    /* город вылета */
+      minmax(170px, 1.2fr)  /* дата вылета */
+      minmax(110px, .8fr)   /* дней */
+      minmax(150px, 1fr)    /* туристы */
+      auto;                 /* кнопка */
+    align-items: end;
+  }
+  .search--tp .search__submit { min-width: 150px; }
+}
+
+/* --- Таблица «ночей × дат вылета» ------------------------------------------
+   Главный инструмент страницы. Один и тот же отель в соседние дни стоит
+   по-разному, и таблица показывает разброс целиком, а не по предложению за
+   раз. Минимум строки отмечен синим — цветом действия, минимум всей таблицы
+   лаймом: правило одного кислотного пятна на экран соблюдено, пятно одно. */
+.tp-grid {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+  overflow: hidden;
+}
+.tp-grid__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: 1px solid var(--c-line);
+}
+.tp-grid__hint { flex: 1 1 auto; min-width: 0; color: var(--c-ink-2); }
+.tp-grid__nav { display: flex; gap: var(--s-2); flex: none; }
+/* На телефоне подсказка занимает пять строк рядом со стрелками и зажимает их
+   в узкую колонку — там она уходит под них отдельной строкой. */
+@media (max-width: 599.98px) {
+  .tp-grid__head { flex-wrap: wrap; gap: var(--s-3); }
+  .tp-grid__hint { flex: 1 0 100%; }
+  .tp-grid__nav { margin-left: auto; }
+}
+.tp-grid__scroll { overflow-x: auto; }
+.tp-grid__table { width: 100%; min-width: 880px; border-collapse: collapse; }
+.tp-grid__table th,
+.tp-grid__table td { border-right: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+.tp-grid__table tr > *:last-child { border-right: 0; }
+.tp-grid__table tbody tr:last-child > * { border-bottom: 0; }
+.tp-grid__table thead th {
+  padding: var(--s-2) var(--s-2);
+  background: var(--c-surface);
+  font-weight: var(--fw-medium);
+  text-align: center;
+}
+.tp-grid__table thead th b { display: block; font-size: var(--t-body-s); color: var(--c-ink); white-space: nowrap; }
+.tp-grid__table thead th span { display: block; font-size: var(--t-micro); color: var(--c-ink-3); }
+.tp-grid__table thead th[data-on="true"] { background: var(--c-blue-soft); }
+.tp-grid__corner { width: 72px; font-size: var(--t-meta); color: var(--c-ink-3); }
+.tp-grid__table tbody th {
+  width: 72px;
+  background: var(--c-surface);
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);
+  color: var(--c-ink-2);
+  text-align: center;
+}
+.tp-grid__table tbody th[data-on="true"] { background: var(--c-blue-soft); color: var(--c-ink); }
+.tp-cell {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-body-s);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--c-ink-body);
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.tp-cell:hover { background: var(--c-surface); }
+.tp-cell[data-min="row"] { color: var(--c-blue); font-weight: var(--fw-medium); }
+.tp-cell[data-min="all"] { background: var(--c-lime); color: var(--c-ink); font-weight: var(--fw-bold); }
+.tp-cell[data-min="all"]:hover { background: var(--c-lime-deep); }
+.tp-cell[aria-pressed="true"] {
+  background: var(--c-blue);
+  color: var(--c-white);
+  font-weight: var(--fw-medium);
+}
+.tp-cell[aria-pressed="true"]:hover { background: var(--c-blue-deep); }
+
+/* --- Список предложений ----------------------------------------------------- */
+.tp-offers { margin-top: var(--s-6); }
+.tp-offers__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2) var(--s-3); margin-bottom: var(--s-4); }
+.tp-offers__filters { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4); }
+.tp-filter { display: grid; gap: var(--s-1); font-size: var(--t-meta); color: var(--c-ink-3); }
+.tp-filter .select { min-width: 200px; }
+/* На телефоне два фильтра встают в ряд: с минимальной шириной в 200px они
+   переносились друг под друга и занимали четыре строки вместо двух. */
+@media (max-width: 599.98px) {
+  .tp-offers__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tp-filter .select { min-width: 0; width: 100%; }
+}
+.tp-offers__empty {
+  padding: var(--s-5);
+  border: 1px dashed var(--c-line-strong);
+  border-radius: var(--r-m);
+  color: var(--c-ink-2);
+}
+.tp-offers__list { display: grid; gap: var(--s-3); }
+.tp-offer {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+}
+/* Выбранное предложение обведено синим — тем же цветом, что и выбранная
+   ячейка таблицы: одно действие, один цвет. */
+.tp-offer[data-on="true"] { border-color: var(--c-blue); box-shadow: inset 0 0 0 1px var(--c-blue); }
+@media (min-width: 900px) {
+  /* auto, а не фиксированные 200px: колонка денег обязана быть ровно такой,
+     какой её делает самая длинная сумма, — лишние пиксели отрывали кнопку
+     от цены и оставляли посреди строки пустое место. */
+  .tp-offer { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .tp-offer__marks { grid-column: 1 / -1; }
+}
+.tp-offer__marks { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.tp-offer__marks:empty { display: none; }
+.tp-offer__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3) var(--s-4); min-width: 0; }
+@media (min-width: 768px) {
+  .tp-offer__facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  /* Вертикальные линейки, а не рамки: пять фактов подряд без разделителя
+     читались одной кашей, а рамка вокруг каждого спорила бы с карточкой. */
+  .tp-offer__facts > div + div { border-left: 1px solid var(--c-line); padding-left: var(--s-4); }
+}
+.tp-offer__facts > div { display: grid; align-content: start; gap: 2px; min-width: 0; }
+.tp-offer__facts span { font-size: var(--t-meta); color: var(--c-ink-3); }
+.tp-offer__facts b { font-size: var(--t-body-s); font-weight: var(--fw-medium); color: var(--c-ink); }
+.tp-offer__facts small { font-size: var(--t-micro); color: var(--c-ink-2); }
+
+/* Деньги и действия — за вертикальной линейкой, тем же приёмом, что делит
+   факты. Раньше это была правая колонка с выключкой вправо: цена, подпись и
+   кнопка вставали по разным осям и висели в воздухе. */
+.tp-offer__buy { display: grid; gap: var(--s-3); }
+@media (min-width: 900px) {
+  .tp-offer__buy {
+    grid-template-columns: minmax(120px, auto) auto;
+    align-items: center;
+    gap: var(--s-5);
+    margin-left: var(--s-5);
+    padding-left: var(--s-5);
+    border-left: 1px solid var(--c-line);
+  }
+}
+.tp-offer__sum { display: grid; align-content: center; gap: 2px; }
+.tp-offer__sum .t-price { font-size: var(--t-h5); line-height: var(--lh-tight); }
+.tp-offer__sum s { font-size: var(--t-body-s); }
+.tp-offer__per { font-size: var(--t-meta); color: var(--c-ink-2); }
+.tp-offer__acts { display: flex; align-items: center; gap: var(--s-2); }
+/* Сердце подгоняется под высоту соседней кнопки: 44 против 48 читались как
+   съехавшая пара, а не как один блок действий. */
+.tp-offer__fav { width: 48px; height: 48px; flex: none; }
+/* Отмеченное сердце красится сигнальным, а не синим: тем же цветом горит
+   избранное на карточках выдачи и на «Похожих турах» внизу этой же страницы —
+   два разных цвета для одного признака читались бы как два разных признака. */
+.tp-offer__fav[aria-pressed="true"] { border-color: var(--c-signal); color: var(--c-signal); }
+.tp-offer__fav[aria-pressed="true"] svg { fill: currentColor; }
+.tp-offer__acts .btn { min-width: 130px; }
+@media (max-width: 899.98px) {
+  .tp-offer__buy {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--c-line);
+  }
+  .tp-offer__acts .btn { min-width: 0; padding-inline: var(--s-5); }
+}
+
+/* --- Что входит и что нет -------------------------------------------------- */
+.tp-inc { display: grid; gap: var(--s-3); }
+.tp-inc li { display: flex; align-items: flex-start; gap: var(--s-3); }
+.tp-inc svg { flex: none; width: 20px; height: 20px; margin-top: 2px; color: var(--c-blue); }
+.tp-ex {
+  margin-top: var(--s-5);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-m);
+  background: var(--c-surface);
+}
+.tp-ex ul { margin-top: var(--s-2); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-ex li { position: relative; padding-left: var(--s-4); }
+.tp-ex li + li { margin-top: var(--s-1); }
+.tp-ex li::before { content: "—"; position: absolute; left: 0; color: var(--c-ink-3); }
+
+/* --- Перелёт --------------------------------------------------------------- */
+.tp-legs { display: grid; gap: var(--s-2); }
+@media (min-width: 600px) { .tp-legs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--grid-gap); } }
+.tp-leg {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+}
+.tp-leg__title { font-size: var(--t-meta); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--c-ink-3); }
+.tp-leg__date { font-size: var(--t-h6); color: var(--c-ink); }
+.tp-leg__route { font-size: var(--t-body-s); color: var(--c-ink-body); }
+.tp-leg__when { font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-marks { display: grid; gap: var(--s-2); margin-top: var(--s-4); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-marks li { display: flex; align-items: center; gap: var(--s-2); }
+.tp-marks svg { flex: none; width: 18px; height: 18px; color: var(--c-ink-3); }
+@media (min-width: 600px) { .tp-marks--wide { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tp-sec .t-meta { color: var(--c-ink-3); }
+
+/* --- Об отеле -------------------------------------------------------------- */
+.tp-about { display: grid; gap: var(--s-5); }
+@media (min-width: 1120px) { .tp-about { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5) var(--s-12); align-items: start; } }
+.tp-about__part h3 { margin-bottom: var(--s-2); }
+.tp-about__part p { max-width: 68ch; }
+.tp-types { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+@media (min-width: 1120px) { .tp-types, .tp-figures { grid-column: 1 / -1; } }
+
+/* Короткая справка: подпись и значение в столбик, столбики в ряд. Таблицей
+   это не делается — на телефоне таблица из семи строк требует прокрутки вбок. */
+.tp-figures { margin-top: var(--s-2); }
+.tp-figures h3 { margin-bottom: var(--s-3); }
+.tp-figures dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3) var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+}
+@media (min-width: 768px) { .tp-figures dl { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tp-figures div { display: grid; gap: 2px; min-width: 0; }
+.tp-figures dt { font-size: var(--t-meta); color: var(--c-ink-3); }
+.tp-figures dd { font-size: var(--t-body-s); font-weight: var(--fw-medium); color: var(--c-ink); }
+
+/* --- Услуги ---------------------------------------------------------------- */
+.tp-svc { display: grid; gap: var(--s-6); }
+.tp-svc__group h4 { margin-bottom: var(--s-3); }
+.tp-svc__list { display: grid; gap: var(--s-2); }
+@media (min-width: 600px) { .tp-svc__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1120px) { .tp-svc__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1530px) { .tp-svc__list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tp-svc__list li { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-body-s); }
+.tp-svc__list svg { flex: none; width: 18px; height: 18px; color: var(--c-ink-3); }
+
+/* --- Номера ---------------------------------------------------------------- */
+.tp-rooms { display: grid; gap: var(--s-3); }
+/* На телефоне четыре категории вставали в четыре экрана подряд, и раздел
+   «Номера» съедал страницу целиком. Лента возвращает им место одного экрана:
+   первая карточка видна, край второй обещает продолжение. Правка живёт
+   только здесь — на планшете и десктопе остаётся сетка. */
+@media (max-width: 767.98px) {
+  .tp-rooms {
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Лента листается от края до края: обрезанная ровно по полю карточка
+       читается как ошибка вёрстки, а не как продолжение ряда. */
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+  .tp-rooms::-webkit-scrollbar { display: none; }
+  .tp-rooms > * { scroll-snap-align: start; }
+}
+@media (min-width: 768px) { .tp-rooms { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--grid-gap); } }
+@media (min-width: 1280px) { .tp-rooms { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tp-room {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+  padding: 0 var(--s-5) var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-m);
+  background: var(--c-white);
+  overflow: hidden;
+}
+/* Снимок во всю ширину карточки: разница между стандартом, семейным и
+   бунгало объясняется кадром быстрее, чем строкой площади. Снимок же —
+   кнопка: за ним открываются остальные кадры категории. */
+.tp-room__media {
+  position: relative;
+  display: block;
+  width: auto;
+  margin: 0 calc(var(--s-5) * -1) var(--s-1);
+  padding: 0;
+  aspect-ratio: 4 / 3;
+  border: 0;
+  background: var(--c-surface-cool);
+  cursor: pointer;
+}
+.tp-room__media img,
+.tp-room__media .photo-stub { width: 100%; height: 100%; object-fit: cover; }
+.tp-room__media .photo-stub b { display: none; }
+/* Стрелка в углу — единственный знак того, что карточка открывается. Без неё
+   снимок читается как иллюстрация, и внутрь никто не заходит. */
+.tp-room__more {
+  position: absolute;
+  right: var(--s-2);
+  bottom: var(--s-2);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  color: var(--c-ink);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.tp-room__more svg { width: 18px; height: 18px; }
+.tp-room__count {
+  position: absolute;
+  left: var(--s-2);
+  bottom: var(--s-2);
+  padding: 3px var(--s-2);
+  border-radius: var(--r-pill);
+  background: rgba(17, 17, 17, .62);
+  color: var(--c-white);
+  font-size: var(--t-micro);
+  line-height: 1.4;
+}
+.tp-room__media:hover .tp-room__more { transform: translateX(2px); }
+.tp-room__media:focus-visible { outline: 2px solid var(--c-ink); outline-offset: -2px; }
+.tp-room h4 { margin-top: var(--s-4); }
+.tp-room__meta { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); font-size: var(--t-body-s); color: var(--c-ink-2); }
+.tp-room__feats { display: grid; gap: var(--s-2); font-size: var(--t-body-s); }
+.tp-room__feats li { display: flex; align-items: center; gap: var(--s-2); }
+.tp-room__feats svg { flex: none; width: 16px; height: 16px; color: var(--c-blue); }
+
+/* --- Карта ----------------------------------------------------------------- */
+/* Липкость снимается, но не позиционирование: пин на полотне абсолютный,
+   и при static он вылетал из карты наверх страницы. top обязателен: от
+   липкого правила остаётся смещение в 110px, и при relative карта съезжала
+   вниз, наезжая на строку расстояний под собой. */
+.map-canvas--tp { position: relative; top: auto; min-height: 0; height: 320px; }
+@media (min-width: 768px) { .map-canvas--tp { height: 380px; } }
+
+/* --- Оценка ---------------------------------------------------------------- */
+.tp-rate { display: grid; gap: var(--s-5); }
+@media (min-width: 768px) { .tp-rate { grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: var(--grid-gap); } }
+.tp-rate__total { display: flex; align-items: center; gap: var(--s-3); }
+.rate-value--lg { font-size: var(--t-h4); padding: var(--s-2) var(--s-3); }
+.tp-rate__list { display: grid; gap: var(--s-2); }
+/* Две колонки критериев на широком экране: полоса длиной в девятьсот
+   пикселей не говорит ничего сверх той, что вдвое короче. */
+@media (min-width: 1120px) { .tp-rate__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2) var(--s-8); } }
+.tp-rate__list li { display: grid; grid-template-columns: 1fr 100px 40px; align-items: center; gap: var(--s-3); font-size: var(--t-body-s); }
+@media (min-width: 600px) { .tp-rate__list li { grid-template-columns: 160px minmax(0, 1fr) 40px; } }
+.tp-rate__bar { height: 6px; border-radius: var(--r-pill); background: var(--c-line); overflow: hidden; }
+.tp-rate__bar i { display: block; height: 100%; background: var(--c-blue); }
+.tp-rate__num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- Что чаще всего упоминают ----------------------------------------------- */
+.tp-tags { margin-top: var(--s-8); }
+.tp-tags h3 { margin-bottom: var(--s-3); }
+.tp-tags__list { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.tag-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding-inline: var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-body);
+}
+.tag-count sup { font-size: var(--t-micro); color: var(--c-ink-3); font-variant-numeric: tabular-nums; }
+
+/* --- Отзывы ---------------------------------------------------------------- */
+/* Карточки в ряду тянутся до общей высоты, а «Полезно» прижато к низу: без
+   этого сосед с полосой снимков был выше, и низ ряда шёл рваной ступенькой. */
+.tp-reviews { display: grid; gap: var(--s-3); margin-top: var(--s-8); align-items: stretch; }
+@media (min-width: 1024px) { .tp-reviews { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--grid-gap); } }
+.tp-reviews > .btn { grid-column: 1 / -1; justify-self: start; margin-top: var(--s-2); }
+.tp-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  background: var(--c-white);
+}
+.tp-review__head { display: flex; align-items: center; gap: var(--s-3); }
+.tp-review__who { display: grid; gap: 1px; min-width: 0; }
+.tp-review__body { display: grid; gap: var(--s-3); }
+.tp-review__part h4 {
+  margin-bottom: var(--s-1);
+  font-size: var(--t-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+.tp-review__part ul { display: grid; gap: var(--s-1); font-size: var(--t-body-s); color: var(--c-ink-body); }
+.tp-review__part li { position: relative; padding-left: var(--s-4); }
+.tp-review__part li::before { position: absolute; left: 0; font-weight: var(--fw-medium); }
+/* Знак вместо цветной заливки: плюс и минус читаются и в чёрно-белой печати,
+   и у тех, кто не различает синий с серым. */
+.tp-review__part[data-kind="pro"] li::before { content: "+"; color: var(--c-blue); }
+.tp-review__part[data-kind="con"] li::before { content: "−"; color: var(--c-ink-3); }
+/* Снимки гостя: ряд миниатюр, а не сетка. Их две-три, и ряд честнее говорит
+   «вот что человек снял», чем аккуратная плитка, которая обещает альбом. */
+.tp-review__pics { display: flex; gap: var(--s-2); }
+.tp-review__pic {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-s);
+  background: var(--c-surface-cool);
+  overflow: hidden;
+  cursor: pointer;
+}
+.tp-review__pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tp-review__pic:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+
+.tp-review__foot { margin-top: auto; padding-top: var(--s-3); border-top: 1px solid var(--c-line); }
+.tp-review__foot .link-btn { display: inline-flex; align-items: center; gap: var(--s-2); }
+.tp-review__foot svg { width: 16px; height: 16px; color: var(--c-ink-3); }
+
+/* --- Похожие туры: лента вместо сетки --------------------------------------
+   Соседних отелей на курорте больше, чем помещается в ряд, и на десктопе
+   тоже: восемь карточек в сетке — это ещё два экрана прокрутки в самом низу
+   страницы, куда доходят уже уставшими. Лента показывает три и обещает
+   остальные. Стрелки — только там, где нет пальца. */
+#tp-similar .rail { padding-bottom: var(--s-1); }
+@media (max-width: 767.98px) {
+  #tp-similar .rail-nav { display: none; }
+  #tp-similar .rail {
+    grid-auto-columns: 82%;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+}
