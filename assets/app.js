@@ -609,12 +609,24 @@ window.App = (function () {
     '</div>';
   };
 
+  /* Сенсорный ввод определяем по типу указателя, а не по ширине окна: на
+     планшете с мышью клавиатуре взяться неоткуда, а на узком ноутбуке она
+     не нужна. Проверяем каждый раз заново — окно можно перетащить на другой
+     экран, да и режим эмуляции в браузере меняется на ходу. */
+  function isTouch() {
+    return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  }
+
   SearchForm.prototype.fieldDest = function () {
     var p = this.p;
+    /* На касании поле открывается «только для чтения»: список выпадает, а
+       клавиатура — нет. Она поднимется вторым касанием, когда человек и
+       правда собрался печатать, а не просто выбрать страну из списка. */
     return '<div class="field" data-field="to">' +
       '<span class="field__label">' + esc(t('f.to')) + '</span>' +
       '<div class="field__control">' + icon('pin') +
         '<input class="field__input" type="text" data-dest-input autocomplete="off" ' +
+          (isTouch() ? 'readonly ' : '') +
           'placeholder="' + esc(t('f.toPlaceholder')) + '" aria-label="' + esc(t('f.to')) + '" ' +
           'value="' + esc(destLabel(p.to)) + '">' +
       '</div>' +
@@ -678,6 +690,20 @@ window.App = (function () {
       if (opener && root.contains(opener)) {
         var field = opener.closest('.field');
         var open = field.getAttribute('data-open') === 'true';
+        var di = qs('[data-dest-input]', opener);
+        if (di) {
+          /* «Куда» — единственное поле, которое открывается ещё и от фокуса.
+             Раньше клик приходил следом и видел уже открытую панель, считал
+             это вторым нажатием и закрывал её: список выпадал и тут же
+             исчезал, приходилось жать дважды. Клик в пределах того же
+             касания пропускаем. */
+          if (Date.now() - (self.destAt || 0) < 400) return;
+          if (!open) { self.closeAll(); self.open(field); return; }
+          /* Список уже открыт — значит это второе нажатие, и человек хочет
+             печатать. Снимаем «только чтение», клавиатура поднимается. */
+          if (di.hasAttribute('readonly')) { di.removeAttribute('readonly'); di.focus(); }
+          return;
+        }
         self.closeAll();
         if (!open) self.open(field);
         return;
@@ -715,9 +741,18 @@ window.App = (function () {
     root.addEventListener('focusin', function (e) {
       if (e.target.matches('[data-dest-input]')) {
         var f = e.target.closest('.field');
+        self.destAt = Date.now();
         self.closeAll();
         self.open(f);
         self.renderDest(e.target.value);
+      }
+    });
+
+    /* Ушли из поля — снова «только чтение». Без этого следующее касание
+       поднимало бы клавиатуру сразу, с первого раза. */
+    root.addEventListener('focusout', function (e) {
+      if (isTouch() && e.target.matches('[data-dest-input]')) {
+        e.target.setAttribute('readonly', 'readonly');
       }
     });
 
@@ -749,6 +784,15 @@ window.App = (function () {
       var c = qs('.field__control', f);
       if (c && c.hasAttribute('aria-expanded')) c.setAttribute('aria-expanded', 'false');
     });
+    /* Поле закрылось — возвращаем «только чтение», чтобы следующее касание
+       снова открыло список без клавиатуры. Кроме поля под курсором: закрытие
+       случается и в ответ на фокус, а снимать возможность печатать у того,
+       кто только что её попросил, значит гасить клавиатуру на полпути. */
+    if (isTouch()) {
+      qsa('[data-dest-input]', this.root).forEach(function (i) {
+        if (i !== document.activeElement) i.setAttribute('readonly', 'readonly');
+      });
+    }
   };
 
   SearchForm.prototype.refreshValues = function () {
@@ -1010,6 +1054,87 @@ window.App = (function () {
     return photo(h.img, h.name, nm(r.name) + ', ' + nm(Data.country(tour.countryId).name));
   }
 
+  /* --- Снимки внутри карточки --------------------------------------------
+     Лента кадров, которую листают, не уходя со страницы: на телефоне пальцем,
+     на десктопе стрелками, что выходят по наведению. Под лентой — точки,
+     они же говорят, сколько кадров всего.
+
+     Сделано штатной прокруткой со snap, а не переносом слайдов скриптом:
+     инерция, отмена жеста на полпути и возврат к ближайшему кадру достаются
+     от браузера и работают там ровно так, как ожидает палец. */
+  var SHOTS_MAX = 5;
+
+  function cardShots(tour) {
+    var h = Data.hotel(tour.hotelId);
+    var r = Data.resort(tour.countryId, tour.resortId);
+    var caption = nm(r.name) + ', ' + nm(Data.country(tour.countryId).name);
+    var list = Data.gallery(tour.hotelId).slice(0, SHOTS_MAX);
+    /* Кадров нет вовсе — остаётся заглушка, и листать нечего. */
+    if (!list.length) return photo('', h.name, caption);
+
+    return '<div class="shots" data-shots>' +
+      '<div class="shots__track" data-shots-track>' +
+        list.map(function (name, i) {
+          return '<div class="shots__item">' +
+            '<img src="assets/img/' + name + '.webp" alt="' + esc(h.name) + '" ' +
+            'loading="lazy" decoding="async"' + (i ? '' : ' fetchpriority="low"') + '>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      (list.length > 1
+        ? '<button class="shots__nav shots__nav--prev" type="button" data-card-shot="-1" ' +
+            'aria-label="' + esc(t('card.shotPrev')) + '">' + icon('chev-l') + '</button>' +
+          '<button class="shots__nav shots__nav--next" type="button" data-card-shot="1" ' +
+            'aria-label="' + esc(t('card.shotNext')) + '">' + icon('chev-r') + '</button>' +
+          '<div class="shots__dots" data-shot-dots>' +
+            list.map(function (x, i) {
+              return '<button type="button" data-card-shot-to="' + i + '"' + (i ? '' : ' data-on="true"') + ' ' +
+                'aria-label="' + esc(t('card.shotN', { n: i + 1 })) + '"></button>';
+            }).join('') +
+          '</div>'
+        : '') +
+    '</div>';
+  }
+
+  /* Точки ведутся от самой прокрутки, а не от нажатий: жест пальцем и клик по
+     стрелке приводят к одному и тому же событию, и считать позицию дважды не
+     нужно. Слушатель один на документ — карточки перерисовываются при смене
+     языка, валюты и фильтров, и переподписываться было бы не на что. */
+  function syncShots(track) {
+    var box = track.parentNode;
+    var dots = qsa('[data-shot-dots] > *', box);
+    if (!dots.length) return;
+    var i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    dots.forEach(function (d, k) {
+      if (k === i) d.setAttribute('data-on', 'true'); else d.removeAttribute('data-on');
+    });
+  }
+
+  function initShots() {
+    document.addEventListener('scroll', function (e) {
+      var t2 = e.target;
+      if (t2 && t2.nodeType === 1 && t2.hasAttribute && t2.hasAttribute('data-shots-track')) syncShots(t2);
+    }, true);
+
+    document.addEventListener('click', function (e) {
+      var step = e.target.closest('[data-card-shot]');
+      if (step) {
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = qs('[data-shots-track]', step.parentNode);
+        tr.scrollBy({ left: tr.clientWidth * Number(step.getAttribute('data-card-shot')), behavior: 'smooth' });
+        return;
+      }
+      var to = e.target.closest('[data-card-shot-to]');
+      if (to) {
+        e.preventDefault();
+        e.stopPropagation();
+        var tr2 = qs('[data-shots-track]', to.closest('[data-shots]'));
+        tr2.scrollTo({ left: tr2.clientWidth * Number(to.getAttribute('data-card-shot-to')), behavior: 'smooth' });
+      }
+    }, true);
+  }
+
   function priceBlock(tour, opts) {
     opts = opts || {};
     /* Скидка не красит цену: её называют старая цена рядом и плашка процента */
@@ -1065,7 +1190,7 @@ window.App = (function () {
     var c = Data.country(tour.countryId), r = Data.resort(tour.countryId, tour.resortId);
     return '<article class="tour-card reveal" data-tour="' + tour.id + '" ' +
       'itemscope itemtype="https://schema.org/Product">' +
-      '<div class="tour-card__media">' + tourPhoto(tour) +
+      '<div class="tour-card__media">' + cardShots(tour) +
         '<div class="tour-card__top"><div class="tour-card__badges">' + badges(tour) + '</div>' +
           favBtn(tour) + '</div>' +
         /* Остаток мест — на снимке, у нижнего края: своей строкой в теле он
@@ -1119,19 +1244,15 @@ window.App = (function () {
     var h = Data.hotel(tour.hotelId);
     var c = Data.country(tour.countryId), r = Data.resort(tour.countryId, tour.resortId);
     var perMonth = Math.round(tour.price / 12 / 1000) * 1000;
-    var dots = '';
-    for (var i = 0; i < 5; i++) dots += '<span' + (i === 0 ? ' data-on="true"' : '') + '></span>';
-
     return '<article class="tour-row reveal" data-tour="' + tour.id + '" tabindex="0" ' +
       'itemscope itemtype="https://schema.org/Product">' +
-      '<div class="tour-row__media">' + tourPhoto(tour) +
+      '<div class="tour-row__media">' + cardShots(tour) +
         '<div class="tour-card__top"><div class="tour-card__badges">' +
           /* Кислотный на карточке появляется один раз: у горящего тура это
              плашка срочности, у самого дешёвого — метка минимума. */
           badges(tour) + (opts.min && !tour.hot ? '<span class="badge-hot">' + t('card.bestPrice') + '</span>' : '') +
         '</div>' + favBtn(tour) + '</div>' +
         '<span class="tour-row__count">' + t('card.photos', { n: tour.photos }) + '</span>' +
-        '<div class="tour-row__dots">' + dots + '</div>' +
       '</div>' +
       '<div class="tour-row__body">' +
         '<h3 class="tour-row__name"><span itemprop="name">' + esc(h.name) + '</span> ' + starsHTML(h.s) + '</h3>' +
@@ -1224,9 +1345,19 @@ window.App = (function () {
     scope.addEventListener('click', function (e) {
       var fav = e.target.closest('[data-fav]');
       if (fav) {
-        var on = toggleFav(fav.getAttribute('data-fav'));
-        fav.setAttribute('aria-pressed', String(on));
-        fav.setAttribute('aria-label', t(on ? 'card.favOn' : 'card.fav'));
+        var favId = fav.getAttribute('data-fav');
+        var on = toggleFav(favId);
+        /* Одно предложение может быть на странице не одной кнопкой: на
+           странице отеля это сердечко на снимке и «В избранное» в блоке цены,
+           в выдаче — карточка и строка на карте. Красим все разом, иначе
+           половина остаётся с прежним видом и человек не понимает, сохранил
+           он тур или нет. */
+        qsa('[data-fav="' + favId + '"]').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(on));
+          b.setAttribute('aria-label', t(on ? 'card.favOn' : 'card.fav'));
+          var lbl = qs('span', b);
+          if (lbl) lbl.textContent = t(on ? 'card.favOn' : 'card.fav');
+        });
         return;
       }
       var alt = e.target.closest('[data-alt]');
@@ -1485,6 +1616,8 @@ window.App = (function () {
       if (field) setTimeout(function () { field.focus(); }, 400);
     });
 
+    initShots();
+
     /* появление блоков — одно движение на страницу */
     if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       var io = new IntersectionObserver(function (entries) {
@@ -1574,6 +1707,7 @@ window.App = (function () {
     destLabel: destLabel, guestsLabel: guestsLabel, summaryLine: summaryLine,
     SearchForm: SearchForm,
     tourCard: tourCard, tourRow: tourRow, bindCards: bindCards, tourHref: tourHref,
+    seatsLabel: seatsLabel,
     starsHTML: starsHTML, photo: photo, ratingHTML: ratingHTML, badges: badges, priceBlock: priceBlock
   };
 })();

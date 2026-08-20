@@ -345,6 +345,9 @@
   transition: transform var(--dur-5) var(--ease-out);
 }
 .tour-card:hover .tour-card__media img { transform: scale(1.03); }
+/* Наезд по наведению — приём для одиночного снимка. В ленте кадр лежит в
+   прокручиваемой дорожке, и увеличенная картинка сбивала бы её ширину. */
+.tour-card:hover .tour-card__media .shots__item img { transform: none; }
 .tour-card__flags {
   position: absolute;
   top: var(--s-2); left: var(--s-2);

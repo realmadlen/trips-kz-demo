@@ -182,6 +182,13 @@
             '<button class="tp-gallery__nav tp-gallery__nav--next" type="button" data-shot="1" ' +
               'aria-label="' + esc(t('tp.galleryNext')) + '">' + icon('chev-r') + '</button>'
           : '') +
+        /* Сердечко там же, где на карточках выдачи, — в правом верхнем углу
+           снимка. Ярлык тот же самый, data-fav с номером предложения, поэтому
+           отмеченный здесь тур горит красным и в выдаче, и на главной. */
+        '<button class="fav tp-gallery__fav" type="button" data-fav="' + esc(tour.id) + '" ' +
+          'aria-pressed="' + App.isFav(tour.id) + '" ' +
+          'aria-label="' + esc(t(App.isFav(tour.id) ? 'card.favOn' : 'card.fav')) + '">' +
+          icon('heart') + '</button>' +
         '<span class="tp-gallery__count">' +
           esc(t('tp.galleryOf', { i: shot + 1, n: shots.length })) + '</span>' +
         '<button class="tp-gallery__zoom" type="button" data-gal-open>' +
@@ -460,7 +467,11 @@
         '<a class="link-blue" href="#tp-map">' + esc(t('tp.hotelOnMap')) + '</a></div>' +
 
       '<p class="tp-info__text">' + esc(about) + '</p>' +
-      '<a class="link-blue" href="#tp-about">' + esc(t('card.more')) + '</a>' +
+      /* Раньше это была ссылка-якорь на раздел «Об отеле» ниже: нажатие
+         уносило страницу вниз, человек терял место и возвращался скроллом.
+         Текст короткий, разворачивать его есть смысл прямо здесь. */
+      '<button class="link-btn" type="button" data-about-more aria-expanded="false">' +
+        esc(t('card.more')) + '</button>' +
 
       '<div class="tp-info__facts">' + facts.map(function (x) {
         return '<div class="tp-fact">' +
@@ -597,7 +608,7 @@
       '<div class="tp-offer__marks">' +
         App.badges(o) +
         (o.instant ? '<span class="tag tag--outline">' + icon('check') + esc(t('card.instant')) + '</span>' : '') +
-        (o.seats ? '<span class="tag">' + (o.seats === 1 ? esc(t('card.seats1')) : esc(t('card.seats', { n: o.seats }))) + '</span>' : '') +
+        (o.seats ? '<span class="tag">' + esc(App.seatsLabel(o.seats)) + '</span>' : '') +
         (on ? '<span class="tag tag--dark">' + esc(t('tp.selected')) + '</span>' : '') +
       '</div>' +
       '<div class="tp-offer__facts">' +
@@ -1165,6 +1176,16 @@
 
     /* Таблица и список */
     main.addEventListener('click', function (e) {
+      /* «Подробнее» под описанием отеля: разворачивает абзац на месте. */
+      var aboutBtn = e.target.closest('[data-about-more]');
+      if (aboutBtn) {
+        var txt = qs('.tp-info__text');
+        var open = aboutBtn.getAttribute('aria-expanded') === 'true';
+        txt.classList.toggle('is-open', !open);
+        aboutBtn.setAttribute('aria-expanded', String(!open));
+        aboutBtn.textContent = t(open ? 'card.more' : 'seo.less');
+        return;
+      }
       var shift = e.target.closest('[data-grid]');
       if (shift) {
         gridFrom = Fmt.toISO(Fmt.addDays(Fmt.parseISO(gridFrom), +shift.getAttribute('data-grid')));

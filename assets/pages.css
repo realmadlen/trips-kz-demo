@@ -1040,19 +1040,83 @@
    держал карточку раскрытой даже там, где содержимого на 190. */
 @media (min-width: 900px) { .tour-row__media { aspect-ratio: auto; min-height: 0; } }
 .tour-row__media img { width: 100%; height: 100%; object-fit: cover; }
-.tour-row__dots {
-  position: absolute;
-  left: 0; right: 0; bottom: var(--s-2);
-  display: flex;
-  justify-content: center;
-  gap: 4px;
+/* --- Лента снимков в карточке -------------------------------------------
+   Живёт внутри .tour-card__media и .tour-row__media, занимает их целиком.
+   Прокрутка со snap: жест пальцем работает сам, стрелки лишь двигают её на
+   ширину кадра. Полосу прокрутки прячем — её роль играют точки. */
+.shots { position: absolute; inset: 0; }
+.shots__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 }
-.tour-row__dots span {
+.shots__track::-webkit-scrollbar { display: none; }
+.shots__item { scroll-snap-align: start; height: 100%; }
+.shots__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.shots__nav {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  color: var(--c-ink);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.shots__nav--prev { left: var(--s-2); }
+.shots__nav--next { right: var(--s-2); }
+.shots__nav svg { width: 18px; height: 18px; }
+/* Стрелки — для мыши: выходят по наведению на карточку и не закрывают кадр
+   всё остальное время. На сенсорном экране их нет вовсе, там листают
+   пальцем, а наведения не существует. */
+@media (hover: hover) and (pointer: fine) {
+  .tour-card:hover .shots__nav,
+  .tour-row:hover .shots__nav,
+  .shots__nav:focus-visible { opacity: 1; }
+}
+
+/* Точки прижаты вправо, а не по центру. Слева у нижней кромки уже стоят
+   свои надписи — «Осталось 3 места» на карточке главной и «17 фото» в
+   выдаче, — и по центру первая точка ложилась прямо на них. */
+.shots__dots {
+  position: absolute;
+  right: var(--s-1); bottom: var(--s-2);
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+/* Сама точка — 5 px, но нажимать по ней приходится пальцем, поэтому вокруг
+   лежит прозрачное поле 16×16. Меньше — промах на каждом втором касании. */
+.shots__dots > * {
+  width: 16px; height: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.shots__dots > *::before {
+  content: '';
+  display: block;
   width: 5px; height: 5px;
+  margin: auto;
   border-radius: var(--r-circle);
   background: rgba(255, 255, 255, .55);
+  transition: background-color var(--dur-2) var(--ease-out);
 }
-.tour-row__dots span[data-on="true"] { background: var(--c-white); }
+.shots__dots > *[data-on="true"]::before { background: var(--c-white); }
 .tour-row__count {
   position: absolute;
   left: var(--s-2); bottom: var(--s-2);
@@ -3444,6 +3508,15 @@ a.chan:hover { border-color: var(--c-ink); }
 }
 .tp-gallery__count { left: var(--s-3); }
 .tp-gallery__zoom { right: var(--s-3); cursor: pointer; }
+/* Сердечко в верхнем правом углу снимка — на том же месте, где оно стоит
+   на карточках выдачи и главной, чтобы искать его не приходилось. */
+.tp-gallery__fav {
+  position: absolute;
+  top: var(--s-3); right: var(--s-3);
+  width: 40px; height: 40px;
+  box-shadow: var(--shadow-1);
+}
+.tp-gallery__fav svg { width: 20px; height: 20px; }
 .tp-gallery__zoom svg { width: 16px; height: 16px; }
 
 /* Лента миниатюр прокручивается вбок: двенадцать кадров в столбец под кадром
@@ -3670,6 +3743,13 @@ a.chan:hover { border-color: var(--c-ink); }
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+/* Развёрнутое описание. Обрезку снимаем вместе с -webkit-box: без смены
+   display строка -webkit-line-clamp продолжает управлять высотой. */
+.tp-info__text.is-open {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
 }
 .tp-info__facts {
   display: grid;
@@ -3943,6 +4023,50 @@ a.chan:hover { border-color: var(--c-ink); }
 .tp-offer__fav[aria-pressed="true"] { border-color: var(--c-signal); color: var(--c-signal); }
 .tp-offer__fav[aria-pressed="true"] svg { fill: currentColor; }
 .tp-offer__acts .btn { min-width: 130px; }
+
+/* --- Варианты тура на телефоне ------------------------------------------
+   На широком экране это таблица в пять колонок с подписями над значениями.
+   На телефоне те же пять пар вставали столбиком и растягивали каждый вариант
+   до 368 px: семь предложений — это две с половиной высоты экрана мимо цены.
+
+   Здесь подписи сняты (в списке из семи одинаковых строк их читают один раз),
+   а значения собраны в две колонки по три строки: срок, состав, перелёт.
+   Вариант ужимается до 235 px и остаётся таблицей — значения выстроены по
+   левому краю колонок и сравниваются взглядом сверху вниз. */
+@media (max-width: 767.98px) {
+  .tp-offer { padding: var(--s-3); gap: var(--s-2); }
+  .tp-offer__facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-content: start;
+    gap: 2px var(--s-3);
+    font-size: var(--t-body-s);
+    color: var(--c-ink-body);
+  }
+  .tp-offer__facts > div { display: flex; align-items: baseline; gap: var(--s-1); min-width: 0; }
+  /* Перелёт занимает всю ширину: перевозчик и «прямой рейс» — одна мысль. */
+  .tp-offer__facts > div:nth-child(5) { grid-column: 1 / -1; }
+  .tp-offer__facts span { display: none; }
+  .tp-offer__facts b { font-weight: var(--fw-regular); }
+  /* Даты — единственное, что выделено: по ним и выбирают. */
+  .tp-offer__facts > div:nth-child(1) b { font-weight: var(--fw-medium); color: var(--c-ink); }
+  .tp-offer__facts small { font-size: var(--t-body-s); color: var(--c-ink-3); text-transform: lowercase; }
+  .tp-offer__facts small::before { content: '\00b7 '; }
+
+  .tp-offer__buy {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--s-3);
+    padding-top: var(--s-2);
+    border-top: 1px solid var(--c-line);
+  }
+  .tp-offer__sum { gap: 0; }
+  .tp-offer__sum .t-price { font-size: var(--t-h6); }
+  .tp-offer__acts { justify-content: flex-end; }
+  .tp-offer__fav { width: 40px; height: 40px; }
+  .tp-offer__acts .btn { min-width: 0; --btn-h: 40px; padding-inline: var(--s-4); }
+}
 @media (max-width: 899.98px) {
   .tp-offer__buy {
     grid-template-columns: minmax(0, 1fr) auto;
