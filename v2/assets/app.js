@@ -602,7 +602,7 @@ window.App = (function () {
       '</button>' +
       '<div class="pop" role="listbox">' +
         '<div class="fsearch">' + icon('search') +
-          '<input type="text" data-filter placeholder="' + esc(t('flt.searchIn')) + '" aria-label="' + esc(t('flt.searchIn')) + '">' +
+          '<input type="search" inputmode="search" spellcheck="false" data-filter placeholder="' + esc(t('flt.searchIn')) + '" aria-label="' + esc(t('flt.searchIn')) + '">' +
         '</div>' +
         '<div class="pop__group" data-list>' +
           list.map(function (c) {
@@ -1096,8 +1096,21 @@ window.App = (function () {
     for (var i = 0; i < n; i++) s += icon('star');
     return '<span class="stars" aria-label="' + n + '★">' + s + '</span>';
   }
+  /* Размеры всех снимков, снятые с файлов. Нужны, чтобы у <img> были width и
+     height: без них браузер не знает пропорцию до загрузки и на медленной сети
+     раскладка прыгает. Строка вместо объекта — 156 записей в три килобайта. */
+  var IMG_DIM = (function () {
+    var map = {}, list = 'ae-dubai:1600x679,ae-rak:1600x1067,ae-sharjah:1600x1200,az-baku:1600x1200,cn-sanya:1600x920,cover-ae-dubai:160x160,cover-ae-rak:160x160,cover-ae-sharjah:160x160,cover-aqua:160x160,cover-az-baku:160x160,cover-beach:160x160,cover-cn-sanya:160x160,cover-cu-varadero:160x160,cover-cy-ayia:160x160,cover-cz-prague:160x160,cover-do-punta:160x160,cover-eg-hurghada:160x160,cover-eg-sharm:160x160,cover-es-costabrava:160x160,cover-ge-batumi:160x160,cover-hero-antalya:160x160,cover-hero-bay-1600:160x160,cover-hero-blue-1600:160x160,cover-hero-coast-1600:160x160,cover-hero-maldives:160x160,cover-hero-terrace-1600:160x160,cover-hero-wave-1600:160x160,cover-hero-window-1600:160x160,cover-hotel-aquapark:160x160,cover-hotel-beach:160x160,cover-hotel-facade:160x160,cover-hotel-grounds:160x160,cover-hotel-pool:160x160,cover-hotel-restaurant:160x160,cover-hotel-spa:160x160,cover-hotel:160x160,cover-id-kuta:160x160,cover-in-goa:160x160,cover-kg-issyk:160x160,cover-kz-borovoe:160x160,cover-kz-saryagash:160x160,cover-kz-turkestan:160x160,cover-lk-bentota:160x160,cover-meal:160x160,cover-mv-male:160x160,cover-my-langkawi:160x160,cover-pool:160x160,cover-room-bng-2:160x160,cover-room-bng-3:160x160,cover-room-bng:160x160,cover-room-fam-2:160x160,cover-room-fam-3:160x160,cover-room-fam:160x160,cover-room-sea-2:160x160,cover-room-sea-3:160x160,cover-room-sea:160x160,cover-room-std-2:160x160,cover-room-std-3:160x160,cover-room-std:160x160,cover-room:160x160,cover-spa:160x160,cover-th-pattaya:160x160,cover-th-phuket:160x160,cover-tour-antalya:160x160,cover-tour-dubai:160x160,cover-tour-phuket:160x160,cover-tour-sharm:160x160,cover-tr-alanya:160x160,cover-tr-antalya:160x160,cover-tr-belek:160x160,cover-tr-kemer:160x160,cover-tr-side:160x160,cover-uz-samarkand:160x160,cover-vn-nhatrang:160x160,cu-varadero:1600x1200,cy-ayia:1600x1067,cz-prague:1600x900,do-punta:1600x900,eg-hurghada:1600x1200,eg-sharm:1600x1060,es-costabrava:1600x1064,ge-batumi:1600x1067,hero-antalya:2200x897,hero-bay-1600:1600x900,hero-bay-2560:2560x1440,hero-bay-3840:3840x2160,hero-blue-1600:1600x900,hero-blue-2560:2560x1440,hero-blue-3840:3840x2160,hero-coast-1600:1600x900,hero-coast-2560:2560x1440,hero-coast-3840:3840x2160,hero-maldives:2560x1440,hero-terrace-1600:1600x900,hero-terrace-2560:2560x1440,hero-terrace-3840:3840x2160,hero-wave-1600:1600x900,hero-wave-2560:2560x1440,hero-wave-3840:3840x2160,hero-window-1600:1600x900,hero-window-2560:2560x1440,hero-window-3840:3840x2160,hotel-aquapark:1200x800,hotel-beach:1200x800,hotel-facade:1200x800,hotel-grounds:1200x800,hotel-pool:1200x800,hotel-restaurant:1200x800,hotel-spa:1200x800,id-kuta:1600x1068,in-goa:1600x1067,kg-issyk:1600x1200,kz-borovoe:1600x1200,kz-saryagash:1600x1200,kz-turkestan:1600x1067,lk-bentota:1600x1067,mv-male:1600x801,my-langkawi:1600x1067,pool:1600x833,room-bng-2:1200x800,room-bng-3:1200x800,room-bng:1200x800,room-fam-2:1200x800,room-fam-3:1200x800,room-fam:1200x800,room-sea-2:1200x800,room-sea-3:1200x800,room-sea:1200x800,room-std-2:1200x800,room-std-3:1200x800,room-std:1200x800,team-aigerim:600x750,team-aliya:600x750,team-asel:600x750,team-daniyar:600x750,team-dinara:600x750,team-kamila:600x750,team-maria:600x750,team-nurlan:600x750,team-oleg:600x750,team-saule:600x750,team-timur:600x750,team-yerzhan:600x750,th-pattaya:1600x1200,th-phuket:1600x1200,tour-antalya:900x620,tour-dubai:900x600,tour-phuket:900x600,tour-sharm:900x596,tr-alanya:1600x615,tr-antalya:1600x900,tr-belek:1600x1067,tr-kemer:1600x286,tr-side:1600x1200,uz-samarkand:1600x949,vn-nhatrang:1600x1067'.split(',');
+    for (var i = 0; i < list.length; i++) {
+      var pair = list[i].split(':'), wh = pair[1].split('x');
+      map[pair[0]] = ' width="' + wh[0] + '" height="' + wh[1] + '"';
+    }
+    return map;
+  })();
+
   function photo(name, alt, caption) {
-    if (name) return '<img src="assets/img/' + name + '.webp" alt="' + esc(alt) + '" loading="lazy" decoding="async">';
+    if (name) return '<img src="../assets/img/' + name + '.webp" alt="' + esc(alt) + '"' +
+      (IMG_DIM[name] || '') + ' loading="lazy" decoding="async">';
     /* Снимка нет — ставим #EAEBED с подписью места, а не градиент: DESIGN.md */
     return '<div class="photo-stub">' + icon('pin') +
       (caption ? '<b>' + esc(caption) + '</b>' : '') + '</div>';
@@ -1130,8 +1143,8 @@ window.App = (function () {
       '<div class="shots__track" data-shots-track>' +
         list.map(function (name, i) {
           return '<div class="shots__item">' +
-            '<img src="assets/img/' + name + '.webp" alt="' + esc(h.name) + '" ' +
-            'loading="lazy" decoding="async"' + (i ? '' : ' fetchpriority="low"') + '>' +
+            '<img src="../assets/img/' + name + '.webp" alt="' + esc(h.name) + '"' +
+            (IMG_DIM[name] || '') + ' loading="lazy" decoding="async"' + (i ? '' : ' fetchpriority="low"') + '>' +
           '</div>';
         }).join('') +
       '</div>' +
@@ -1239,6 +1252,26 @@ window.App = (function () {
       '</span>';
   }
 
+  /* Состав пакета одной строкой: пять значков в том же наборе и порядке, что
+     в разделе «Что входит в цену» на странице тура. Вернули в выдачу потому,
+     что без него цену не с чем сравнить — два предложения отличаются не
+     только суммой, и проваливаться в каждое ради этого никто не будет.
+     Значок без подписи молчит для скринридера, поэтому у каждого есть имя. */
+  var INC = [['plane', 'inc.flight'], ['bed', 'inc.stay'], ['meal', 'inc.meal'],
+             ['map', 'inc.transfer'], ['shield', 'inc.ins']];
+  function incRow() {
+    return '<div class="inc-row"><span class="inc-row__lbl">' + esc(t('inc.title')) + '</span>' +
+      INC.map(function (x) {
+        var name = t(x[1]);
+        /* Подсказка висит на обёртке значка, а сама обёртка спрятана от
+           скринридера: имя ему отдаёт соседняя скрытая строка, и получить
+           одно и то же дважды он не может. */
+        return '<span class="inc-row__i">' +
+          '<span class="inc-row__ico" title="' + esc(name) + '" aria-hidden="true">' + icon(x[0]) + '</span>' +
+          '<span class="u-visually-hidden">' + esc(name) + '</span></span>';
+      }).join('') + '</div>';
+  }
+
   function tourCard(tour) {
     var h = Data.hotel(tour.hotelId);
     var c = Data.country(tour.countryId), r = Data.resort(tour.countryId, tour.resortId);
@@ -1265,10 +1298,12 @@ window.App = (function () {
         '</div>' +
         '<div class="tour-card__price price-line">' + priceBlock(tour) + offerMeta(tour) +
           '<span class="tour-card__per">' + esc(t('card.perTwo')) + '</span></div>' +
+        incRow() +
         '<div class="tour-card__cta">' +
-          '<button class="btn btn--blue" type="button" data-buy>' + esc(t('card.buy')) + '</button>' +
+          '<button class="btn btn--blue" type="button" data-buy>' + esc(t('card.book')) + '</button>' +
           '<button class="btn btn--ghost" type="button" data-more>' + esc(t('card.more')) + '</button>' +
         '</div>' +
+        '<p class="cta-note">' + esc(t('card.bookNote')) + '</p>' +
       '</div>' +
     '</article>';
   }
@@ -1348,13 +1383,18 @@ window.App = (function () {
            странице тура — там есть и раздел «Что входит в цену», и строка
            оператора. Рассрочка осталась и встала вплотную к цене: она про
            деньги, а не про условия. */
+        incRow() +
         '<p class="installment">' + t('card.installment', { sum: Fmt.money(perMonth) }) + '</p>' +
         /* Два действия в ряд — тот же приём, что в компактной карточке на
            главной. Ссылкой «Подробнее» выглядела слабее, чем весит. */
+        /* «Купить тур» ничего не покупало: открывалась форма заявки. Кнопка
+           теперь называет то, что произойдёт, а строка под ней снимает
+           главный страх — что деньги спишут прямо сейчас. */
         '<div class="tour-row__cta">' +
-          '<button class="btn btn--blue" type="button" data-buy>' + esc(t('card.buy')) + '</button>' +
+          '<button class="btn btn--blue" type="button" data-buy>' + esc(t('card.book')) + '</button>' +
           '<button class="btn btn--ghost" type="button" data-more>' + esc(t('card.more')) + '</button>' +
         '</div>' +
+        '<p class="cta-note">' + esc(t('card.bookNote')) + '</p>' +
         '<div class="tour-row__links">' +
           '<button class="disclose" type="button" data-alt aria-expanded="false">' +
             esc(t('card.altDates')) + icon('chev-d') + '</button>' +
@@ -1763,6 +1803,6 @@ window.App = (function () {
     SearchForm: SearchForm,
     tourCard: tourCard, tourRow: tourRow, bindCards: bindCards, tourHref: tourHref,
     seatsLabel: seatsLabel,
-    starsHTML: starsHTML, photo: photo, ratingHTML: ratingHTML, badges: badges, priceBlock: priceBlock
+    starsHTML: starsHTML, photo: photo, imgDim: function (n) { return IMG_DIM[n] || ''; }, ratingHTML: ratingHTML, badges: badges, priceBlock: priceBlock
   };
 })();

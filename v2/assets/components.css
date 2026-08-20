@@ -1,0 +1,689 @@
+/* ============================================================================
+   trips.kz — компоненты.
+   Форма взята из референсов: [R1] pill-кнопки, круглые иконки-стрелки, крупные
+   скругления на фото, чёрный блок с радиусом, аккордеон FAQ, строка чисел;
+   [R3] карточка товара с ценой и скидкой, теги, плоские поля, плотный ритм.
+   ========================================================================== */
+
+/* ============================================================================
+   1. Кнопки
+   ========================================================================== */
+
+.btn {
+  --btn-h: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--btn-h);
+  min-width: var(--tap-min);
+  padding-inline: var(--s-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);          /* [R1] */
+  font-size: var(--t-body-s);
+  font-weight: var(--fw-medium);         /* [R3] */
+  letter-spacing: var(--ls-none);
+  line-height: 1;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-1) var(--ease-out);
+}
+.btn:active { transform: translateY(1px); }
+.btn[disabled], .btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  transform: none;
+  background: var(--c-surface);
+  border-color: var(--c-line);
+  color: var(--c-ink-4);
+}
+
+.btn--primary {                          /* [R1] чёрная капсула «Request a Custom Plan» */
+  background: var(--c-ink);
+  color: var(--c-white);
+}
+.btn--primary:hover { background: var(--c-ink-body); }
+
+.btn--light {                            /* [R1] белая капсула «Get Started» поверх фото */
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+.btn--light:hover { background: var(--c-surface-cool); }
+
+.btn--ghost {                            /* [R1] контурная капсула «Explore Now» */
+  background: transparent;
+  border-color: var(--c-line-strong);
+  color: var(--c-ink);
+}
+.btn--ghost:hover { border-color: var(--c-ink); }
+.on-dark .btn--ghost,
+.u-inverse .btn--ghost {
+  border-color: var(--c-inverse-line);
+  color: var(--c-inverse-ink);
+}
+.on-dark .btn--ghost:hover,
+.u-inverse .btn--ghost:hover { border-color: var(--c-inverse-ink); }
+
+.btn--flat {                             /* [R3] прямоугольная кнопка каталога */
+  border-radius: var(--r-s);
+  background: var(--c-ink);
+  color: var(--c-white);
+}
+.btn--flat:hover { background: var(--c-ink-body); }
+
+.btn--lg { --btn-h: 56px; font-size: var(--t-body); padding-inline: var(--s-6); }
+.btn--sm { --btn-h: 36px; font-size: var(--t-meta); padding-inline: var(--s-4); }
+.btn--block { display: flex; width: 100%; }
+
+/* Круглая иконочная кнопка — [R1] стрелка ↗ в углу карточки, стрелки карусели */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-circle);
+  background: var(--c-white);
+  color: var(--c-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
+}
+.btn-icon:hover { border-color: var(--c-ink); }
+.btn-icon--solid {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-white);
+}
+.btn-icon--solid:hover { background: var(--c-ink-body); border-color: var(--c-ink-body); }
+.btn-icon[disabled] { color: var(--c-ink-4); border-color: var(--c-line); cursor: not-allowed; }
+.btn-icon svg { width: 18px; height: 18px; }
+
+/* ============================================================================
+   2. Поля ввода
+   ========================================================================== */
+
+.field { display: block; }
+.field__label {
+  display: block;
+  margin-bottom: var(--s-1);
+  font-size: var(--t-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-2);                 /* [R3] микрометка над полем */
+}
+.field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--s-2) var(--s-3);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-s);             /* [R3] 10px */
+  color: var(--c-ink-body);
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
+}
+.field__control:hover { border-color: var(--c-line-strong); }
+.field__control:focus-within {
+  border-color: var(--c-ink);
+  outline: 2px solid var(--c-ink);
+  outline-offset: -1px;
+}
+.field__control > svg {
+  flex: none;
+  width: 18px; height: 18px;
+  color: var(--c-ink-3);
+}
+.field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: var(--t-body);
+  color: inherit;
+}
+.field__input::placeholder { color: var(--c-ink-3); }
+/* Системная рамка снята с самого поля, но взамен даётся своя и только для
+   клавиатуры: раньше при переходе Tab’ом внутри выпадашки не было видно
+   ничего, кроме подсветки контейнера. */
+.field__input:focus { outline: none; }
+.field__input:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; border-radius: 2px; }
+.field__hint {
+  margin-top: var(--s-1);
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+
+/* Поисковый модуль набран капсулами целиком: вкладки, кнопка и город вылета
+   в шапке — пилюли, и поля с радиусом 10 оставались единственной прямоугольной
+   геометрией на панели. Многострочное поле сохраняет радиус 15: капсула на
+   трёх строках текста ломается. */
+.search .field__control { border-radius: var(--r-pill); padding-inline: var(--s-4); }
+.search .field__control--area { border-radius: var(--r-m); }
+
+.field--error .field__control { border-color: var(--c-signal); }
+.field--error .field__hint { color: var(--c-signal); }
+.field--disabled .field__control {
+  background: var(--c-surface);
+  border-color: var(--c-line);
+  color: var(--c-ink-4);
+  cursor: not-allowed;
+}
+
+/* Подписка в футере — [R1] линия снизу и стрелка справа */
+.field-underline {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--c-inverse-line);
+}
+.field-underline .field__input {
+  font-size: var(--t-body);
+  color: var(--c-inverse-ink);
+}
+.field-underline .field__input::placeholder { color: var(--c-inverse-ink-2); }
+.field-underline button {
+  flex: none;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; padding: 0;
+  color: var(--c-inverse-ink);
+  cursor: pointer;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.field-underline button:hover { transform: translateX(3px); }
+
+/* ============================================================================
+   3. Поисковый модуль — ядро продукта
+   ========================================================================== */
+
+.search {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);             /* [R3] 20px */
+  box-shadow: var(--shadow-1);
+}
+.search--over-media {                    /* поверх фото — [R1] */
+  border-color: transparent;
+  box-shadow: var(--shadow-2);
+}
+/* Треки объявлены как minmax(0, 1fr), а не 1fr: у 1fr нижняя граница —
+   min-content, и поле «Куда» с иконкой и длинным placeholder распирало
+   колонку шире экрана. */
+.search__row {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+.search__row > * { min-width: 0; }
+.search__submit { align-self: end; }
+
+@media (min-width: 768px) {
+  .search { padding: var(--s-5); border-radius: var(--r-xl); }
+  .search__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Минимумы треков подобраны так, чтобы их сумма с зазорами и кнопкой влезала
+   в панель уже на 1120 (контейнер 1040 − 50 внутренних полей = 990). С
+   прежними 160/180/200/120/170 + 160 сумма давала 1065, и на самом узком
+   экране, где строка из пяти полей включается, панель вылезала за край. */
+@media (min-width: 1120px) {
+  .search__row {
+    grid-template-columns:
+      minmax(130px, 1fr)  /* город вылета */
+      minmax(150px, 1.2fr)/* направление */
+      minmax(170px, 1.3fr)/* даты */
+      minmax(100px, .8fr) /* ночи */
+      minmax(140px, 1fr)  /* туристы */
+      auto;               /* кнопка */
+    align-items: end;
+  }
+  .search__submit { min-width: 140px; }
+}
+@media (min-width: 1360px) { .search__submit { min-width: 160px; } }
+
+/* ============================================================================
+   4. Теги, плашки, метки
+   ========================================================================== */
+
+/* Все метки внутри карточки — капсулы: прямоугольные плашки на скруглённой
+   карточке спорили с её геометрией и читались как чужие элементы. */
+.tag {                                   /* [R3] */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 6px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  color: var(--c-ink-body);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-none);
+  white-space: nowrap;
+}
+.tag svg { flex: none; width: 14px; height: 14px; }
+.tag--warm  { background: var(--c-warm); color: var(--c-ink); }        /* [R3] */
+.tag--cool  { background: var(--c-surface-cool); color: var(--c-ink-body); }
+.tag--dark  { background: var(--c-ink); color: var(--c-white); }
+.tag--outline { background: transparent; border: 1px solid var(--c-line-strong); }
+
+/* Кликабельный тег-фильтр — [R3] быстрые направления */
+.tag-btn {
+  cursor: pointer;
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  min-height: 40px;
+  padding-inline: var(--s-3);
+  border-radius: var(--r-pill);          /* [R1] капсула */
+  transition: border-color var(--dur-2) var(--ease-out),
+              background-color var(--dur-2) var(--ease-out);
+}
+.tag-btn:hover { border-color: var(--c-ink); }
+.tag-btn[aria-pressed="true"] {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-white);
+}
+
+/* Плашка скидки — [R3]. Чёрный по кислотному: 18.3:1. */
+.badge-discount {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--c-acid);
+  color: var(--c-ink);
+  font-size: var(--t-meta);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-none);
+}
+
+/* Звёзды отеля */
+.stars { display: inline-flex; gap: 2px; color: var(--c-warm-deep); }
+.stars svg { width: 12px; height: 12px; }
+
+/* ============================================================================
+   5. Карточка тура — [R3] карточка товара в форме [R1]
+   ========================================================================== */
+
+.tour-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  transition: border-color var(--dur-3) var(--ease-out),
+              box-shadow var(--dur-3) var(--ease-out);
+}
+.tour-card:hover {
+  border-color: var(--c-line-strong);
+  box-shadow: var(--shadow-1);
+}
+.tour-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--c-surface-cool);
+  overflow: hidden;
+}
+.tour-card__media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-5) var(--ease-out);
+}
+.tour-card:hover .tour-card__media img { transform: scale(1.03); }
+/* Наезд по наведению — приём для одиночного снимка. В ленте кадр лежит в
+   прокручиваемой дорожке, и увеличенная картинка сбивала бы её ширину. */
+.tour-card:hover .tour-card__media .shots__item img { transform: none; }
+.tour-card__flags {
+  position: absolute;
+  top: var(--s-2); left: var(--s-2);
+  display: flex; gap: var(--s-1);
+}
+.tour-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  flex: 1 1 auto;
+}
+.tour-card__place {
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+.tour-card__title {
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+.tour-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.tour-card__price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+.tour-card__per {
+  width: 100%;
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+
+/* ============================================================================
+   6. Медиа и наложения — [R1]
+   ========================================================================== */
+
+.media {
+  position: relative;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--c-surface-cool);
+}
+.media img { width: 100%; height: 100%; object-fit: cover; }
+.media--hero { aspect-ratio: 16 / 9; }
+@media (max-width: 767px) { .media--hero { aspect-ratio: 3 / 4; } }
+
+.media__scrim {
+  position: absolute; inset: 0;
+  background: var(--c-scrim-grad);
+}
+.media__content {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-8) var(--s-4);
+  text-align: center;
+  color: var(--c-white);
+}
+.media__content .t-display,
+.media__content .t-h1,
+.media__content .t-h2 { color: var(--c-white); }
+
+/* Тёмная карточка поверх фотографии — [R1] «Smart Monitoring» */
+.glass-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-m);
+  background: var(--c-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--c-white);
+  border: 1px solid var(--c-inverse-line);
+}
+.glass-card .t-caps { color: var(--c-inverse-ink-2); }
+
+/* ============================================================================
+   7. Аккордеон — [R1] FAQ с + и ×
+   ========================================================================== */
+
+.accordion { border-top: 1px solid var(--c-line); }
+.accordion__item { border-bottom: 1px solid var(--c-line); }
+.accordion__trigger {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--s-4) 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+.accordion__sign {
+  flex: none;
+  width: 20px; height: 20px;
+  margin-top: 3px;
+  color: var(--c-ink-2);
+  transition: transform var(--dur-3) var(--ease-in-out);
+}
+.accordion__trigger[aria-expanded="true"] .accordion__sign { transform: rotate(45deg); }
+.accordion__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-4) var(--ease-in-out);
+}
+.accordion__panel > div { overflow: hidden; }
+.accordion__item[data-open="true"] .accordion__panel { grid-template-rows: 1fr; }
+.accordion__content {
+  padding-bottom: var(--s-4);
+  max-width: 68ch;
+  color: var(--c-ink-2);
+  line-height: var(--lh-long);
+}
+
+/* ============================================================================
+   8. Строка чисел — [R1] «98.4% · Zero · 25 Years»
+   ========================================================================== */
+
+.figures {
+  display: grid;
+  gap: var(--s-6);
+  padding-block: var(--s-8);
+  border-top: 1px solid var(--c-line);
+  border-bottom: 1px solid var(--c-line);
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .figures { grid-auto-flow: column; grid-auto-columns: 1fr; }
+}
+.figures__value {
+  font-size: var(--t-h3);
+  font-weight: var(--fw-light);
+  letter-spacing: var(--ls-display);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+.figures__label {
+  margin-top: var(--s-1);
+  font-size: var(--t-meta);
+  color: var(--c-ink-2);
+}
+
+/* ============================================================================
+   9. Шапка и переключатель языка
+   ========================================================================== */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: color-mix(in srgb, var(--c-page) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--c-line);
+}
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  /* Одна строка вместо служебной полосы и шапки — высота задана токеном
+     страницы, чтобы первый экран мог её вычесть. */
+  min-height: var(--header-h, 60px);
+}
+.site-header__nav {
+  display: none;
+  gap: var(--s-6);
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+@media (min-width: 1024px) { .site-header__nav { display: flex; } }
+.site-header__nav a { transition: color var(--dur-2) var(--ease-out); }
+.site-header__nav a:hover { color: var(--c-ink); }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+.brand svg { width: 22px; height: 22px; }
+
+.lang {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-white);
+}
+/* В меню переключатель занимает всю ширину: там он пункт списка, а не
+   служебный значок в углу панели */
+.lang--block { display: flex; align-self: stretch; }
+.lang--block button { flex: 1 1 0; justify-content: center; }
+.lang button {
+  min-width: 42px;
+  min-height: 34px;
+  padding-inline: var(--s-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  font-size: var(--t-meta);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease-out),
+              color var(--dur-2) var(--ease-out);
+}
+.lang button[aria-pressed="true"] {
+  background: var(--c-ink);
+  color: var(--c-white);
+}
+
+/* ============================================================================
+   10. Чёрный блок и футер — [R1]
+   ========================================================================== */
+
+.panel-dark {
+  background: var(--c-inverse-bg);
+  color: var(--c-inverse-ink);
+  border-radius: var(--r-xl);
+  padding: var(--s-8) var(--s-5);
+}
+@media (min-width: 1024px) { .panel-dark { padding: var(--s-16) var(--s-12); } }
+
+.site-footer__cols {
+  display: grid;
+  gap: var(--s-8);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 600px)  { .site-footer__cols { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-footer__cols { grid-template-columns: repeat(4, 1fr); } }
+.site-footer a {
+  color: var(--c-inverse-ink);
+  transition: color var(--dur-2) var(--ease-out);
+}
+.site-footer a:hover { color: var(--c-cool); }
+
+/* ============================================================================
+   11. Состояния загрузки и пустоты
+   ========================================================================== */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface);
+  border-radius: var(--r-s);
+}
+.skeleton::after {
+  content: "";
+  position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg,
+    transparent, rgba(255,255,255,.75), transparent);
+  animation: skeleton-sweep 1.4s var(--ease-sine) infinite;
+}
+@keyframes skeleton-sweep { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-12) var(--s-4);
+  text-align: center;
+  border: 1px dashed var(--c-line-strong);
+  border-radius: var(--r-l);
+  color: var(--c-ink-2);
+}
+
+/* Плейсхолдер вместо неподтверждённых данных — требование PRODUCT.md */
+.placeholder-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 4px var(--s-3);
+  border: 1px dashed var(--c-line-strong);
+  border-radius: var(--r-pill);
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--c-ink-2);
+  background: var(--c-white);
+}
+
+/* ============================================================================
+   12. Одно авторское движение: появление секции.
+   [R1] строит страницу на спокойном подъёме контента; движение одно и общее.
+   ========================================================================== */
+
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity var(--dur-5) var(--ease-out),
+      transform var(--dur-5) var(--ease-out);
+  }
+  .js .reveal.is-in { opacity: 1; transform: none; }
+}

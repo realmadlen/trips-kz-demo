@@ -8,6 +8,21 @@
   var nmGen = App.nmGen, nmAcc = App.nmAcc;
   var tours = [], mins = {}, hotTab = 'all';
 
+  /* Выбранная вкладка горящих живёт в адресе страницы. Так подобранную
+     подборку можно отправить ссылкой и вернуться к ней кнопкой «назад» —
+     ровно то же правило, что уже действует в выдаче. replaceState, а не
+     push: щёлканье по вкладкам не должно набивать историю. */
+  function hotFromURL() {
+    var v = new URLSearchParams(location.search).get('hot');
+    return v || 'all';
+  }
+  function setHotInURL(id) {
+    var p = new URLSearchParams(location.search);
+    if (id && id !== 'all') p.set('hot', id); else p.delete('hot');
+    var q = p.toString();
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+  }
+
   /* Счётчики отзывов и оценок — те же разряды, что и у цен: неразрывный пробел */
   function num(n) {
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, Fmt.NBSP);
@@ -74,7 +89,8 @@
       return '<a class="tile reveal' + (wide ? ' tile--wide' : '') + (hasPhoto ? '' : ' tile--stub') + '" ' +
         'href="' + destHref(id) + '">' +
         (hasPhoto
-          ? '<img src="assets/img/' + c.img + '.webp" alt="' + esc(nm(c.name)) + '" loading="lazy" decoding="async">' +
+          ? '<img src="../assets/img/' + c.img + '.webp" alt="' + esc(nm(c.name)) + '"' +
+            App.imgDim(c.img) + ' loading="lazy" decoding="async">' +
             '<span class="tile__scrim"></span>'
           : '') +
         '<span class="tile__body">' +
@@ -392,9 +408,23 @@
      о том, что голос где-то сохранён, PRODUCT.md запрещает. */
   var LIKED = {};
 
+  /* Отзывы про работу агентства не должны лежать в хвосте: их читают именно
+     те, кто уже выбрал отель и сомневается в продавце. Ставим их вторым,
+     шестым и десятым — так они попадаются в каждом экране прокрутки. */
+  function reviewOrder() {
+    var about = [], rest = [];
+    Data.REVIEWS.forEach(function (r) { (r.about === 'agency' ? about : rest).push(r); });
+    var out = rest.slice();
+    about.forEach(function (r, i) {
+      var at = Math.min(1 + i * 4, out.length);
+      out.splice(at, 0, r);
+    });
+    return out;
+  }
+
   function renderReviews() {
     var box = qs('[data-reviews]');
-    box.innerHTML = Data.REVIEWS.map(function (r) {
+    box.innerHTML = reviewOrder().map(function (r) {
       var who = nm(r.who);
       var initials = who.split(' ').map(function (w) { return w[0]; }).join('');
       var d = r.when.split('-');
@@ -570,6 +600,24 @@
      Снимок сверху, под ним имя, должность и одна строка о том, чем человек
      занимается на деле. Ниже — год прихода и языки: это то немногое, что
      клиент действительно спрашивает, когда выбирает, кому позвонить. */
+  /* Действие в карточке человека. У того, кто ведёт направление, — ссылка на
+     выдачу именно по нему (город вылета берётся текущий, как везде на сайте),
+     у остальных — кнопка заявки. Ссылка, а не кнопка: её можно открыть
+     в новой вкладке и отправить себе. */
+  function teamAction(m) {
+    if (m.to) {
+      var c = Data.country(m.to);
+      var prm = App.defaults();
+      prm.from = App.state.city;
+      prm.to = m.to;
+      return '<a class="team-card__act" href="search.html?' + App.paramsToQuery(prm) + '">' +
+        esc(t('team.toursTo', { country: nmAcc(c), name: nm(m.name).split(' ')[0] })) +
+        icon('arrow-r') + '</a>';
+    }
+    return '<button class="team-card__act" type="button" data-lead-open>' +
+      esc(t('team.ask')) + icon('arrow-r') + '</button>';
+  }
+
   function renderTeam() {
     qs('[data-team]').innerHTML = Data.TEAM.map(function (m) {
       var langs = m.langs.map(function (l) { return t('tp.lang.' + l); }).join(', ');
@@ -584,6 +632,7 @@
             '<dd>' + esc(t('team.since', { y: m.since })) + '</dd>' +
             '<dd>' + esc(t('team.speaks', { list: langs })) + '</dd>' +
           '</dl>' +
+          teamAction(m) +
         '</div>' +
       '</article>';
     }).join('');
@@ -593,6 +642,7 @@
 
   function renderAll() {
     build();
+    hotTab = hotFromURL();
     renderHotTabs();
     renderHot();
     renderTiles();
@@ -625,6 +675,7 @@
         qsa('[data-hot]').forEach(function (b) {
           b.setAttribute('aria-pressed', String(b.getAttribute('data-hot') === hotTab));
         });
+        setHotInURL(hotTab);
         renderHot();
         return;
       }

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>trips.kz — пакетные туры за рубеж из городов Казахстана</title>
 <meta name="description" content="Поиск пакетных туров из Алматы, Астаны, Шымкента и других городов Казахстана: цена за двоих в тенге, даты, отель, питание.">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&family=Unbounded:wght@700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -14,6 +16,7 @@
 <link rel="stylesheet" href="assets/pages.css">
 </head>
 <body class="has-tabbar">
+<a class="skip-link" href="#main" data-i18n="a11y.skip">К основному содержимому</a>
 <script src="assets/sprite.js"></script>
 
 <!--
@@ -242,7 +245,7 @@ FINISH: содержимое — демонстрационный набор (с
   </div>
 </div>
 
-<main>
+<main id="main">
   <!-- 4.2 Первый экран и поисковая форма -->
   <section class="hero">
     <div class="container">
@@ -250,10 +253,10 @@ FINISH: содержимое — демонстрационный набор (с
         <!-- Кадр отдаётся тремя размерами: 4K для больших экранов, 2560 для
              обычных и 1600 для телефона. Один файл на все ширины означал бы
              либо 600 КБ на мобильном интернете, либо мыло на 27 дюймах. -->
-        <img src="assets/img/hero-blue-2560.webp"
-             srcset="assets/img/hero-blue-1600.webp 1600w,
-                     assets/img/hero-blue-2560.webp 2560w,
-                     assets/img/hero-blue-3840.webp 3840w"
+        <img src="../assets/img/hero-blue-2560.webp"
+             srcset="../assets/img/hero-blue-1600.webp 1600w,
+                     ../assets/img/hero-blue-2560.webp 2560w,
+                     ../assets/img/hero-blue-3840.webp 3840w"
              sizes="100vw" width="2560" height="1440"
              alt="Побережье с высоты: густо-синее море с волнами и белой пеной, изумрудное мелководье, белый песок и сосны на склоне"
              fetchpriority="high" decoding="async">
@@ -277,6 +280,9 @@ FINISH: содержимое — демонстрационный набор (с
            введённые город, даты и состав не теряются. -->
       <div class="hero__panel" data-search-host>
         <form class="search search--over-media" id="search-form" novalidate></form>
+        <!-- Обещание стоит там, где о цене впервые думают, — под кнопкой
+             поиска, а не через семь экранов в блоке «Что вы получаете». -->
+        <p class="hero__promise" data-i18n="hero.promise">Цена за двоих одной суммой: перелёт, проживание, питание, страховка и трансфер.</p>
       </div>
     </div>
   </section>
@@ -349,50 +355,11 @@ FINISH: содержимое — демонстрационный набор (с
     </div>
   </section>
 
-  <!-- 4.7 Что вы получаете. Непроверяемые обещания сюда не ставятся: PRODUCT.md -->
-  <section class="section">
-    <div class="container">
-      <div class="section__head">
-        <div>
-          <div class="t-caps section__eyebrow" data-i18n="sec.why.eyebrow">Как мы работаем</div>
-          <h2 class="t-h2" data-i18n="sec.why.title">Что вы получаете</h2>
-        </div>
-      </div>
-      <div class="why">
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-percent"></use></svg></span>
-          <h3 class="t-h5">Цена, которую видно целиком</h3>
-          <p class="t-body-s">Сумма за двоих с перелётом, питанием и трансфером — без пересчёта на последнем шаге.</p>
-        </div>
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-search"></use></svg></span>
-          <h3 class="t-h5">Сравнение операторов в одном списке</h3>
-          <p class="t-body-s">Один поиск вместо трёх вкладок: даты, отель и питание стоят рядом и сопоставимы.</p>
-        </div>
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-card"></use></svg></span>
-          <h3 class="t-h5">Оплата картой, в рассрочку или по счёту</h3>
-          <p class="t-body-s">Kaspi, Halyk, Freedom, рассрочка 0-0-12, перевод по счёту и наличные в офисе.</p>
-        </div>
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-doc"></use></svg></span>
-          <h3 class="t-h5">Документы на почту</h3>
-          <p class="t-body-s">Договор, ваучер, страховка и билеты приходят на e-mail после оплаты.</p>
-        </div>
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-shield"></use></svg></span>
-          <h3 class="t-h5">Страховка и трансфер включены</h3>
-          <p class="t-body-s">Состав пакета указан в каждой карточке — то, что не входит, названо прямо.</p>
-        </div>
-        <div class="why__item reveal">
-          <span class="why__icon"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
-          <h3 class="t-h5">Связь в часы работы</h3>
-          <p class="t-body-s">Телефон и WhatsApp: пн–пт 10:00–19:00, сб 10:00–15:00. Заявка принимается круглосуточно.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  <!-- 4.7 Блок «Что вы получаете» убран: он повторял «Как это работает»,
+       «Оплату и гарантии» и часы работы в заявке — три ответа на один вопрос
+       подряд. Из шести пунктов уцелели два, и оба переехали туда, где
+       возникает сомнение: обещание цены — под форму поиска, состав пакета —
+       в каждую карточку выдачи. -->
   <!-- 4.8 Как это работает -->
   <section class="section">
     <div class="container">
