@@ -1538,6 +1538,88 @@
 }
 .operator:hover { border-color: var(--c-ink); }
 
+/* ============================================================================
+   Команда
+   ========================================================================== */
+
+/* Три колонки на десктопе, две на планшете, лента на телефоне. Лента, а не
+   сетка в один столбец: шесть карточек с портретами столбиком — это полтора
+   экрана пролистывания мимо того, ради чего человек пришёл. Тот же приём, что
+   у блога и похожих туров, поэтому жест уже знаком. */
+.team { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
+@media (min-width: 768px) { .team { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .team { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); } }
+@media (max-width: 767.98px) {
+  .team {
+    /* Явную колонку нужно снять: с grid-auto-flow: column она остаётся первой
+       дорожкой сетки, и её 1fr в прокручиваемом контейнере схлопывается в
+       пару пикселей — первая карточка превращалась в полоску. */
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 72%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+  .team::-webkit-scrollbar { display: none; }
+  .team > * { scroll-snap-align: start; }
+}
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-l);
+  overflow: hidden;
+}
+/* На узкой карточке ленты портрет вертикальный, на широкой — квадратный:
+   4/5 при ширине колонки 383 давало снимок в 479 px и карточку под 700,
+   два ряда таких — почти полтора экрана одних лиц. */
+.team-card__media { aspect-ratio: 4 / 5; background: var(--c-surface-cool); }
+@media (min-width: 768px) { .team-card__media { aspect-ratio: 1 / 1; } }
+/* Кадр обрезается снизу, а не поровну сверху и снизу: на всех шести снимках
+   голова стоит в верхней трети, и симметричная обрезка квадратом срезала бы
+   макушку. Пять процентов сверху лишь снимают избыток воздуха над головой. */
+.team-card__media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 5%;
+  display: block;
+}
+.team-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  flex: 1 1 auto;
+  padding: var(--s-4);
+}
+.team-card__name {
+  font-size: var(--t-h6);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-text);
+  color: var(--c-ink);
+}
+/* Должность не красится в синий: синий на всём сайте значит «сюда можно
+   нажать», а это подпись. Отличается кеглем и тоном, а не цветом ссылки. */
+.team-card__role { font-size: var(--t-body-s); color: var(--c-ink-2); }
+.team-card__note { font-size: var(--t-body-s); color: var(--c-ink-body); }
+/* Год и языки прижаты к низу карточки: у шести человек подписи разной длины,
+   и без этого линейки над ними гуляли бы по всей сетке. */
+.team-card__meta {
+  display: grid;
+  gap: 2px;
+  margin: auto 0 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+  font-size: var(--t-meta);
+  color: var(--c-ink-3);
+}
+.team-card__meta dd { margin: 0; }
+
 /* Ряд меток, который на десктопе переносится по строкам, а на телефоне
    листается в одну. Приём общий для стран над витриной горящих туров и для
    имён операторов: и те и другие занимали на телефоне по три-четыре строки,

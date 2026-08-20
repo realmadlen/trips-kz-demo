@@ -1154,6 +1154,52 @@ window.Data = (function () {
               en: 'Left a request in the evening, got three priced options by morning. Took the middle one and paid by card.' } }
   ];
 
+  /* --- Команда -------------------------------------------------------------
+     Шесть человек, с которыми клиент действительно разговаривает: руководитель,
+     продажи, два менеджера направлений, визы и поддержка. Имена и должности
+     переводятся, как и подписи отзывов, — латиница в казахской и английской
+     версии, иначе на английской странице половина блока остаётся кириллицей.
+     Год прихода — год, а не «стаж 7 лет»: стаж пришлось бы пересчитывать
+     каждый январь, и он бы молча устаревал. */
+  var TEAM = [
+    { id: 't1', img: 'team-dinara', since: 2016, langs: ['ru', 'kk', 'en'],
+      name: { ru: 'Динара Ахметова', kk: 'Динара Ахметова', en: 'Dinara Akhmetova' },
+      role: { ru: 'Руководитель агентства', kk: 'Агенттік жетекшісі', en: 'Head of the agency' },
+      note: { ru: 'Отвечает за подбор операторов и спорные ситуации по заявкам.',
+              kk: 'Операторларды таңдауға және өтінімдер бойынша даулы жағдайларға жауап береді.',
+              en: 'Responsible for choosing operators and for disputed bookings.' } },
+    { id: 't2', img: 'team-yerzhan', since: 2017, langs: ['ru', 'kk'],
+      name: { ru: 'Ержан Сапаров', kk: 'Ержан Сапаров', en: 'Yerzhan Saparov' },
+      role: { ru: 'Руководитель отдела продаж', kk: 'Сату бөлімінің жетекшісі', en: 'Head of sales' },
+      note: { ru: 'Собирает сложные маршруты: несколько городов, дети, длинные окна между рейсами.',
+              kk: 'Күрделі бағыттарды құрастырады: бірнеше қала, балалар, рейстер арасындағы ұзақ үзіліс.',
+              en: 'Builds complex itineraries: several cities, children, long layovers.' } },
+    { id: 't3', img: 'team-aliya', since: 2019, langs: ['ru', 'kk', 'tr'],
+      name: { ru: 'Алия Нурланова', kk: 'Әлия Нұрланова', en: 'Aliya Nurlanova' },
+      role: { ru: 'Менеджер по Турции и ОАЭ', kk: 'Түркия және БАӘ бойынша менеджер', en: 'Türkiye and UAE manager' },
+      note: { ru: 'Знает, чем отличаются соседние отели одной звёздности на одной линии.',
+              kk: 'Бір желідегі бірдей жұлдызды көрші қонақүйлердің айырмашылығын біледі.',
+              en: 'Knows how neighbouring hotels of the same class actually differ.' } },
+    { id: 't4', img: 'team-timur', since: 2020, langs: ['ru', 'kk', 'en'],
+      name: { ru: 'Тимур Бекмуратов', kk: 'Тимур Бекмұратов', en: 'Timur Bekmuratov' },
+      role: { ru: 'Менеджер по Юго-Восточной Азии', kk: 'Оңтүстік-Шығыс Азия бойынша менеджер', en: 'South-East Asia manager' },
+      note: { ru: 'Считает пересадки и стыковки так, чтобы ночь не пришлась на аэропорт.',
+              kk: 'Түнді әуежайда өткізбейтіндей етіп ауысулар мен стыковкаларды есептейді.',
+              en: 'Plans connections so that the night is not spent in an airport.' } },
+    { id: 't5', img: 'team-maria', since: 2021, langs: ['ru', 'en'],
+      name: { ru: 'Мария Соколова', kk: 'Мария Соколова', en: 'Maria Sokolova' },
+      role: { ru: 'Визовая поддержка', kk: 'Виза бойынша қолдау', en: 'Visa support' },
+      note: { ru: 'Ведёт документы по странам, куда нужна виза, и следит за сроками подачи.',
+              kk: 'Виза қажет елдер бойынша құжаттарды жүргізеді және тапсыру мерзімін қадағалайды.',
+              en: 'Handles paperwork for visa countries and tracks submission deadlines.' } },
+    { id: 't6', img: 'team-asel', since: 2023, langs: ['ru', 'kk'],
+      name: { ru: 'Асель Жумабаева', kk: 'Әсел Жұмабаева', en: 'Assel Zhumabayeva' },
+      role: { ru: 'Служба заботы о клиентах', kk: 'Клиенттерге қамқорлық қызметі', en: 'Customer care' },
+      note: { ru: 'На связи после оплаты: ваучеры, изменения рейсов, вопросы уже в поездке.',
+              kk: 'Төлемнен кейін байланыста: ваучерлер, рейс өзгерістері, сапар кезіндегі сұрақтар.',
+              en: 'Stays in touch after payment: vouchers, flight changes, questions during the trip.' } }
+  ];
+
   var ARTICLES = [
     { id: 'a1', date: '2026-08-04', img: 'tr-alanya', min: 6, cat: { ru: 'Сезон', kk: 'Маусым', en: 'Season' },
       title: { ru: 'Куда лететь в октябре из Казахстана', kk: 'Қазанда Қазақстаннан қайда ұшу керек', en: 'Where to fly from Kazakhstan in October' },
@@ -1192,7 +1238,7 @@ window.Data = (function () {
     BEACH_TYPES: BEACH_TYPES, BEACH_OPTS: BEACH_OPTS, BEACH_LINES: BEACH_LINES,
     SERVICES: SERVICES, WATER_FUN: WATER_FUN, OPENING: OPENING,
     HOTEL_TYPES: HOTEL_TYPES, ROOMS: ROOMS, OPERATORS: OPERATORS,
-    COLLECTIONS: COLLECTIONS, REVIEWS: REVIEWS, ARTICLES: ARTICLES,
+    COLLECTIONS: COLLECTIONS, REVIEWS: REVIEWS, ARTICLES: ARTICLES, TEAM: TEAM,
     REVIEW_STATS: REVIEW_STATS,
     build: build, minByCountry: minByCountry, monthsLow: monthsLow, daysLow: daysLow,
     gallery: gallery, cover: cover, stories: stories,

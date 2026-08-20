@@ -545,6 +545,30 @@
     }).join('');
   }
 
+  /* --- Команда -------------------------------------------------------------
+     Снимок сверху, под ним имя, должность и одна строка о том, чем человек
+     занимается на деле. Ниже — год прихода и языки: это то немногое, что
+     клиент действительно спрашивает, когда выбирает, кому позвонить. */
+  function renderTeam() {
+    qs('[data-team]').innerHTML = Data.TEAM.map(function (m) {
+      var langs = m.langs.map(function (l) { return t('tp.lang.' + l); }).join(', ');
+      return '<article class="team-card reveal">' +
+        '<div class="team-card__media">' + App.photo(m.img, nm(m.name)) + '</div>' +
+        '<div class="team-card__body">' +
+          '<h3 class="team-card__name">' + esc(nm(m.name)) + '</h3>' +
+          '<div class="team-card__role">' + esc(nm(m.role)) + '</div>' +
+          '<p class="team-card__note">' + esc(nm(m.note)) + '</p>' +
+          '<dl class="team-card__meta">' +
+            '<dt class="u-visually-hidden">' + esc(t('sec.team.eyebrow')) + '</dt>' +
+            '<dd>' + esc(t('team.since', { y: m.since })) + '</dd>' +
+            '<dd>' + esc(t('team.speaks', { list: langs })) + '</dd>' +
+          '</dl>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+    document.dispatchEvent(new CustomEvent('cards:render'));
+  }
+
   function renderAll() {
     build();
     renderHotTabs();
@@ -552,6 +576,7 @@
     renderTiles();
     renderMonths();
     renderCollections();
+    renderTeam();
     renderRevSummary();
     renderReviews();
     renderArticles();
