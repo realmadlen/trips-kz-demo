@@ -624,6 +624,7 @@
   display: flex;
   gap: var(--s-1);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   margin: calc(var(--s-1) * -1);
   padding: var(--s-1);
@@ -1075,6 +1076,7 @@
   grid-auto-columns: 100%;
   height: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -1434,6 +1436,7 @@
   display: flex;
   gap: var(--s-2);
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: var(--s-2);
   scrollbar-width: thin;
 }
@@ -1646,10 +1649,9 @@
   border-radius: var(--r-l);
   overflow: hidden;
 }
-/* Портрет обрезан строго по плечи: 16/9 — самая широкая пропорция, на которой
-   плечи ещё целиком в кадре, а воздух над макушкой остаётся прежним. Туловище
-   не показываем вовсе: человека узнают по лицу, а каждый лишний сантиметр
-   пояса — это сантиметр, на который лента отодвигает всё, что под ней. */
+/* Портрет обрезан по плечи. 40/27 — это прежние 16/9 плюс двадцать процентов
+   высоты кадра: плечи целиком в кадре, воздух над макушкой прежний, туловище
+   по-прежнему не показываем — человека узнают по лицу. */
 /* position + overflow обязательны: как только у <img> появились width и height,
    у него появилась и собственная пропорция, и процентная высота внутри
    коробки с aspect-ratio перестала разрешаться — снимок вытягивал карточку
@@ -1657,7 +1659,7 @@
 .team-card__media {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 40 / 27;
   background: var(--c-surface-cool);
 }
 /* Кадр обрезается снизу, а не поровну сверху и снизу: на всех снимках
@@ -2963,6 +2965,7 @@ html.is-locked .site-header {
   display: flex;
   gap: var(--s-1);
   overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
   padding-top: var(--s-2);
 }
@@ -3711,6 +3714,7 @@ a.chan:hover { border-color: var(--c-ink); }
   gap: var(--s-2);
   margin-top: var(--s-2);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
   padding-bottom: var(--s-1);
@@ -3743,6 +3747,7 @@ a.chan:hover { border-color: var(--c-ink); }
   margin-top: var(--s-4);
   padding-bottom: var(--s-1);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
 }
 .tp-stories::-webkit-scrollbar { display: none; }

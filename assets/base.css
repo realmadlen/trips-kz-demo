@@ -8,6 +8,11 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Страховка от бокового сдвига: что бы ни вылезло за правый край — рекламная
+     плашка, длинное слово, кадр без ограничения, — страницу нельзя утащить
+     вбок. clip, а не hidden: hidden делает из html прокручиваемый контейнер и
+     ломает прилипающую шапку. */
+  overflow-x: clip;
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
