@@ -338,8 +338,7 @@
           /* Первый кадр стоит прямо в разметке: <img> без src — это пустая
              рамка, пусть и на один тик до showTale. eager, а не lazy: этот
              кадр и есть то, ради чего окно открыли. */
-          '<img src="../assets/img/' + esc(first.shots[0]) + '.webp"' +
-            App.imgDim(first.shots[0]) + ' ' +
+          '<img src="../assets/img/' + esc(first.shots[0]) + '.webp" ' +
             'alt="' + esc(nm(first.name)) + '" ' +
             'decoding="async" fetchpriority="high" data-st-img>' +
         '</figure>' +
@@ -502,8 +501,7 @@
         '<li>' + icon('bed') + '<span>' + esc(roomName()) + '</span></li>' +
         '<li>' + icon('users') + '<span>' + esc(App.guestsLabel(params || App.defaults())) + '</span></li>' +
       '</ul>' +
-      '<button class="btn btn--blue btn--lg btn--block" type="button" data-buy>' + esc(t('card.book')) + '</button>' +
-      '<p class="cta-note cta-note--center">' + esc(t('card.bookNote')) + '</p>' +
+      '<button class="btn btn--blue btn--lg btn--block" type="button" data-buy>' + esc(t('card.buy')) + '</button>' +
       '<a class="btn btn--ghost btn--block" href="#tp-tours">' + icon('calendar') +
         '<span>' + esc(t('tp.toTours')) + '</span></a>' +
       '<p class="tp-price__note">' + esc(t('card.installment', { sum: Fmt.money(perMonth) })) + '</p>' +

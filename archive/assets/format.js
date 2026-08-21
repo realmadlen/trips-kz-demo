@@ -39,27 +39,8 @@ window.Fmt = (function () {
 
   function lang() { return window.I18N ? window.I18N.current : 'ru'; }
 
-  /* Разряды делит Intl, а не своя регулярка: он же знает, что в русской и
-     казахской записи разделитель — неразрывный пробел, а в английской запятая.
-     Пробел из Intl бывает узким неразрывным (U+202F), поэтому приводим его
-     к обычному неразрывному — вёрстка цены рассчитана на него.
-     Месяцы остаются своими: русскому нужен родительный падеж («14 августа»),
-     а казахские формы браузеры отдают вразнобой. */
-  var nfCache = {};
-  function nf() {
-    var key = lang();
-    if (!nfCache[key]) {
-      try {
-        nfCache[key] = new Intl.NumberFormat(key === 'kk' ? 'kk-KZ' : (key === 'en' ? 'en-US' : 'ru-RU'),
-          { maximumFractionDigits: 0 });
-      } catch (e) { nfCache[key] = null; }
-    }
-    return nfCache[key];
-  }
   function groups(n) {
-    var v = Math.round(n), f = nf();
-    if (!f) return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
-    return f.format(v).replace(/[\u00A0\u202F\u2009 ]/g, NBSP);
+    return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
   }
 
   /* Сумма в текущей валюте. Тенге — целыми, валюта — тоже целыми:

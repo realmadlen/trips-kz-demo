@@ -156,11 +156,7 @@
   color: inherit;
 }
 .field__input::placeholder { color: var(--c-ink-3); }
-/* Системная рамка снята с самого поля, но взамен даётся своя и только для
-   клавиатуры: раньше при переходе Tab’ом внутри выпадашки не было видно
-   ничего, кроме подсветки контейнера. */
 .field__input:focus { outline: none; }
-.field__input:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; border-radius: 2px; }
 .field__hint {
   margin-top: var(--s-1);
   font-size: var(--t-meta);
@@ -288,7 +284,7 @@
   cursor: pointer;
   border: 1px solid var(--c-line);
   background: var(--c-white);
-  min-height: 40px;
+  min-height: 36px;
   padding-inline: var(--s-3);
   border-radius: var(--r-pill);          /* [R1] капсула */
   transition: border-color var(--dur-2) var(--ease-out),

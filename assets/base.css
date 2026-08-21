@@ -36,6 +36,30 @@ button, input, select, textarea {
   color: inherit;
 }
 
+/* Полсекунды ожидания второго тапа браузер держит на каждой кнопке — на случай,
+   если это двойное нажатие для зума. Зум страницы это не отключает, только
+   задержку. */
+button, a, label, summary, [role="button"], .tag-btn, .field__control {
+  touch-action: manipulation;
+}
+
+/* Ссылка «к содержимому» — первое, что ловит Tab. Видна только с клавиатуры:
+   мыши она не нужна, а тому, кто идёт табуляцией, иначе пришлось бы пройти
+   всю шапку и весь подвал ради первой карточки. */
+.skip-link {
+  position: absolute;
+  left: var(--s-3);
+  top: -100px;
+  z-index: 100;
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-ink);
+  color: var(--c-white);
+  border-radius: var(--r-s);
+  font-weight: var(--fw-medium);
+  transition: top var(--dur-2) var(--ease-out);
+}
+.skip-link:focus { top: var(--s-3); }
+
 h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd { margin: 0; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 
