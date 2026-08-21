@@ -433,6 +433,10 @@
 /* Шапка при скролле садится по высоте; состав кнопок не меняется —
    одна «Найти туры», отдельная лупа и бургер. */
 .site-header.is-compact .site-header__inner { min-height: var(--header-h-compact); }
+/* Лист меню начинается там, где кончается шапка, — и когда она села тоже.
+   Отметка была прибита к полной высоте, поэтому у прокрученной страницы
+   между шапкой и меню открывалась полоска сайта в восемь пикселей. */
+.site-header.is-compact ~ .menu-sheet { top: var(--header-h-compact); }
 
 /* ============================================================================
    3. Первый экран
@@ -1013,8 +1017,8 @@
 }
 .rate-word { font-size: var(--t-meta); color: var(--c-ink-2); }
 
-.tour-card__cta { display: flex; gap: var(--s-2); margin-top: var(--s-2); }
-.tour-card__cta .btn { --btn-h: 40px; flex: 1 1 auto; }
+.tour-card__cta { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-2); }
+.tour-card__cta .btn { --btn-h: 40px; flex: 1 1 120px; padding-inline: var(--s-3); white-space: nowrap; }
 
 .price-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
 .price-note { width: 100%; font-size: var(--t-meta); color: var(--c-ink-2); }
@@ -1227,7 +1231,11 @@
   gap: var(--s-2);
   margin-top: var(--s-2);
 }
-.tour-row__cta .btn { --btn-h: 40px; flex: 1 1 100px; padding-inline: var(--s-2); }
+/* Основание 120 px и нормальные боковые поля: «Забронировать» — тринадцать
+   букв, и в колонке цены шириной 220 две такие кнопки рядом не помещаются.
+   Когда не помещаются — вторая уходит под первую во всю ширину, а не жмёт
+   текст в рамку. */
+.tour-row__cta .btn { --btn-h: 40px; flex: 1 1 120px; padding-inline: var(--s-3); white-space: nowrap; }
 /* В узкой колонке цена занимала три строки: перенос по flex ставил сумму,
    старую цену, процент и «за двоих» друг под друга как придётся. Здесь это
    фиксированная сетка 2×2 — сумма и «за двоих» сверху, старая цена и процент
@@ -3228,26 +3236,44 @@ html.is-locked .site-header {
    отложенным и заявками возвращаются, не бросая то, что смотрели. */
 .sheet--panel .sheet__panel { max-height: 88svh; }
 @media (min-width: 768px) {
+  /* Панель висит под шапкой у правого края и ростом ровно со своё содержимое.
+     Раньше она тянулась от верха до низа окна, и под тремя строками входа
+     оставалось полэкрана пустоты, а кнопка уезжала к нижнему краю — от неё
+     до формы, к которой она относится, было четыреста пикселей. */
   .sheet--panel .sheet__panel {
     left: auto;
     right: var(--gutter);
-    top: var(--gutter);
-    bottom: var(--gutter);
-    width: min(420px, calc(100vw - var(--gutter) * 2));
-    max-height: none;
-    border-radius: var(--r-xl);
+    top: calc(var(--header-h) + var(--s-2));
+    bottom: auto;
+    width: min(400px, calc(100vw - var(--gutter) * 2));
+    max-height: calc(100vh - var(--header-h) - var(--s-8));
+    border-radius: var(--r-l);
+    box-shadow: var(--shadow-2);
     animation: panel-in var(--dur-4) var(--ease-out);
   }
-  /* Колонка задана по высоте окна, поэтому тело растягивается, а действие
-     прижато к низу: иначе кнопка вставала посреди панели. */
-  .sheet--panel .sheet__body { flex: 1 1 auto; }
-  @keyframes panel-in { from { transform: translateX(24px); opacity: 0; } }
+  /* Тело больше не растягивается на всю высоту: панель кончается там же, где
+     кончается список. Прокрутка включается сама, когда список длиннее окна. */
+  .sheet--panel .sheet__body { flex: 0 1 auto; }
+  @keyframes panel-in { from { transform: translateY(-8px); opacity: 0; } }
 }
 @media (prefers-reduced-motion: reduce) { .sheet--panel .sheet__panel { animation: none; } }
 .sheet--panel .sheet__body { display: flex; flex-direction: column; gap: var(--s-4); padding-block: var(--s-4); }
 .sheet--panel .sheet__foot .btn { flex: 1 1 auto; }
 .panel__lead { font-size: var(--t-body-s); color: var(--c-ink-2); }
 .panel__form { display: flex; flex-direction: column; gap: var(--s-3); }
+/* Что будет после входа: подпись и список, а не три выключенные карточки. */
+.panel__soon { display: flex; flex-direction: column; gap: var(--s-2); }
+.panel__soonTitle { color: var(--c-ink-3); }
+.panel__soonList { display: flex; flex-direction: column; gap: var(--s-1); }
+.panel__soonList li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 32px;
+  font-size: var(--t-body-s);
+  color: var(--c-ink-2);
+}
+.panel__soonList svg { width: 18px; height: 18px; color: var(--c-ink-3); flex: none; }
 /* Разделитель со словом: «или напишите здесь» — это развилка, а не заголовок */
 .panel__sep {
   display: flex;

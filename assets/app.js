@@ -431,11 +431,12 @@ window.App = (function () {
      сервисов. Разделы названы, но помечены «после входа»: обещать готовый
      кабинет в макете нечестно. */
   function openProfile() {
+    /* Три строки о том, что появится после входа, — списком под одной подписью,
+       а не тремя карточками с повторяющимся «После входа» в каждой. Повтор
+       занимал столько же места, сколько сама форма, и выглядел как три
+       выключенные кнопки. */
     var link = function (ico, name) {
-      return '<span class="chan chan--off">' +
-        '<span class="chan__ico">' + icon(ico) + '</span>' +
-        '<span class="chan__text"><b>' + esc(name) + '</b><span>' + esc(t('prof.soon')) + '</span></span>' +
-      '</span>';
+      return '<li>' + icon(ico) + '<span>' + esc(name) + '</span></li>';
     };
     var host = panel(t('prof.title'),
       '<p class="panel__lead">' + esc(t('prof.lead')) + '</p>' +
@@ -448,10 +449,13 @@ window.App = (function () {
           '<span class="field__hint" data-prof-hint role="status"></span>' +
         '</label>' +
       '</form>' +
-      '<div class="chan-list chan-list--muted">' +
-        link('doc', t('prof.orders')) +
-        link('luggage', t('prof.booked')) +
-        link('percent', t('prof.subs')) +
+      '<div class="panel__soon">' +
+        '<div class="t-caps panel__soonTitle">' + esc(t('prof.soon')) + '</div>' +
+        '<ul class="panel__soonList">' +
+          link('doc', t('prof.orders')) +
+          link('luggage', t('prof.booked')) +
+          link('percent', t('prof.subs')) +
+        '</ul>' +
       '</div>',
       '<button class="btn btn--primary" type="button" data-prof-send>' + esc(t('prof.get')) + '</button>');
 
