@@ -2672,15 +2672,18 @@ html.is-locked .site-header {
    остальных полях, и он стоит на своих 15px от края. */
 /* Явные цвета обязательны: без них системная тёмная тема Windows красит
    выпадающий список своей парой и текст пропадает. */
+/* Капсула, а не прямоугольник со скруглением: рядом в той же строке стоят
+   «Фильтры», переключатель вида и кнопка «Изменить» — все капсулы, и
+   десятипиксельный уголок у сортировки выбивался из ряда. */
 .select {
   background-color: var(--c-white);
   color: var(--c-ink);
   display: inline-flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 calc(var(--s-3) + 18px) 0 var(--s-3);
+  padding: 0 calc(var(--s-3) + 18px) 0 var(--s-4);
   border: 1px solid var(--c-line);
-  border-radius: var(--r-s);
+  border-radius: var(--r-pill);
   background: var(--c-white);
   font-size: var(--t-body-s);
   color: var(--c-ink);
